@@ -69,8 +69,7 @@ CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
 	CutterParams.push_back(idt);
-	CutterParams.push_back(idt);
-	Instrument.ActualToothCount=Instrument.UsedToothCount=2;
+	Instrument.ActualToothCount=Instrument.UsedToothCount=1;
 	Instrument.CutDirection=false;
 	Instrument.ToolType=0;
 }

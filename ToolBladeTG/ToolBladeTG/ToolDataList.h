@@ -21,6 +21,8 @@ interface IInstrInsList abstract
 	virtual HRESULT UpdateIndInsertAttributes(int index, const IndInsAttributes*) = 0;
 	virtual HRESULT QueryIndInsertObject(int index, const CIndexableInsert**) = 0;
 	virtual HRESULT QueryToolData(ToolData*) = 0;
+	virtual HRESULT RequestNewInsert(int* index) = 0;
+	virtual HRESULT RequestRemoveInsert(int index) = 0;
 	virtual HRESULT ShowPoint(gp_Pnt, bool) = 0;
 	virtual HRESULT RefreshCutter(int index, IndInsert*) = 0;
 };

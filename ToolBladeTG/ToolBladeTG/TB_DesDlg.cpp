@@ -75,6 +75,7 @@ BEGIN_MESSAGE_MAP(CTB_DesDlg, CDialog)
 	//	ON_NOTIFY(NM_THEMECHANGED, IDC_ACTIVEEDGEPOS, &CTB_DesDlg::OnNMThemeChangedActiveedgepos)
 	//	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_ACTIVEEDGEPOS, &CTB_DesDlg::OnNMReleasedcaptureActiveedgepos)
 	ON_BN_CLICKED(IDC_REFRESH, &CTB_DesDlg::OnBnClickedRefresh)
+	ON_EN_CHANGE(IDC_EDIT1, &CTB_DesDlg::OnEnChangeEdit1)
 END_MESSAGE_MAP()
 
 
@@ -780,4 +781,11 @@ void CTB_DesDlg::OnBnClickedRefresh()
 	IndInsert a;
 	GetComplexStruct(&a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+}
+
+
+void CTB_DesDlg::OnEnChangeEdit1()
+{
+	int cnt = TeethCntSpin.GetScrollPos(0);
+
 }

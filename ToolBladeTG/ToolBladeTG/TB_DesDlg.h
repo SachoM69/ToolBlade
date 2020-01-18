@@ -118,4 +118,5 @@ public:
 	//afx_msg void OnNMReleasedcaptureActiveedgepos(NMHDR *pNMHDR, LRESULT *pResult);
 
 	afx_msg void OnBnClickedRefresh();
+	afx_msg void OnEnChangeEdit1();
 };
