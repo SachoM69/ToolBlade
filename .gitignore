@@ -1,0 +1,5 @@
+*.bat
+*.sdf
+*.ncb
+x64
+Debug
