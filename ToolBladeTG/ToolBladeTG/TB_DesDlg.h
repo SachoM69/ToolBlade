@@ -88,6 +88,7 @@ private:
 	int II_ActiveEdge; //номер кромки, выбранной в качестве рабочей
 	CImageList* ImageList;
 	CSliderCtrl ActiveEdgePos;// Скроллер выбора положения расчетной точки на лезвии инструмента
+	CMenu ListViewContextMenu; // меню "удалить", "добавить", ...
 	Standard_Integer EdgePos; //Положение бегунка выбора положения точки на режущей кромке
 	Standard_Real EdgePos_t;//
 	int d0;//для выбора первого размера из массива
@@ -118,5 +119,17 @@ public:
 	//afx_msg void OnNMReleasedcaptureActiveedgepos(NMHDR *pNMHDR, LRESULT *pResult);
 
 	afx_msg void OnBnClickedRefresh();
-	afx_msg void OnEnChangeEdit1();
+//	afx_msg void OnEnChangeEdit1();
+	afx_msg void OnNMRClickIilist(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnItemchangedIilist(NMHDR *pNMHDR, LRESULT *pResult);
+
+	// меню в списке пластин
+	void CTB_DesDlg::MenuBtnDelete();
+	void CTB_DesDlg::MenuBtnEdit();
+	void CTB_DesDlg::MenuBtnNew();
+
+	// перечитываем список пластин из документа
+	void UpdateInsertList(void);
+	// меняем заголовок активной пластины
+	void UpdateInsertListSoft(void);
 };

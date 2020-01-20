@@ -48,6 +48,23 @@ END_MESSAGE_MAP()
 CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 {
 	for(int i=0; i<3; i++) MyCoolArrow[i]=0;
+	IndInsert IndIns = GetDefaultInsert();
+	IndInsData idt;
+	idt.libdata=IndIns;
+	idt.diagdata.IsDisabled=false;
+	idt.libcpptr=nullptr;
+	CutterParams.push_back(idt);
+	Instrument.ActualToothCount=Instrument.UsedToothCount=1;
+	Instrument.CutDirection=false;
+	Instrument.ToolType=0;
+}
+
+CToolBladeTGDoc::~CToolBladeTGDoc()
+{
+}
+
+IndInsert CToolBladeTGDoc::GetDefaultInsert() const
+{
 	IndInsert IndIns;
 	IndIns.IGroup=0;//номер группы пластины
 	IndIns.IIForm=2;//номер формы пластины
@@ -64,18 +81,7 @@ CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 	IndIns.eps=0;
 	IndIns.r=0.1;
 	IndIns.ActEdge=0;
-	IndInsData idt;
-	idt.libdata=IndIns;
-	idt.diagdata.IsDisabled=false;
-	idt.libcpptr=nullptr;
-	CutterParams.push_back(idt);
-	Instrument.ActualToothCount=Instrument.UsedToothCount=1;
-	Instrument.CutDirection=false;
-	Instrument.ToolType=0;
-}
-
-CToolBladeTGDoc::~CToolBladeTGDoc()
-{
+	return IndIns;
 }
 
 BOOL CToolBladeTGDoc::OnNewDocument()
@@ -311,6 +317,32 @@ void CToolBladeTGDoc::OnTooltype()
 	TTD->DoModal();
 
 	delete TTD;
+}
+
+HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
+{
+	size_t indop(*index);
+	IndInsData idt;
+	
+	if(*index<0 || indop>=CutterParams.size()) idt.libdata=GetDefaultInsert();
+	else idt.libdata=CutterParams[*index].libdata;
+	idt.diagdata.IsDisabled=false;
+	idt.libcpptr=nullptr;
+	CutterParams.push_back(idt);
+	Instrument.ActualToothCount++; Instrument.UsedToothCount++;
+	*index = CutterParams.size()-1;
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::RequestRemoveInsert(int index)
+{
+	size_t indop(index);
+	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
+	if(CutterParams[index].libcpptr) delete CutterParams[index].libcpptr;
+	Instrument.ActualToothCount--;
+	if(!CutterParams[index].diagdata.IsDisabled) Instrument.UsedToothCount--;
+	CutterParams.erase(index+CutterParams.begin());
+	return S_OK;
 }
 
 HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, bool show)

@@ -41,6 +41,8 @@ private:
 	Handle_ISession_Direction MyCoolArrow[3];
 	Handle_ISession_Direction PntDirArrow;
 	Handle_AIS_Point VisPnt;
+
+	IndInsert GetDefaultInsert() const;
 	// Операции
 public:
 
@@ -58,6 +60,8 @@ public:
 	virtual HRESULT UpdateIndInsertAttributes(int index, const IndInsAttributes*) override;
 	virtual HRESULT QueryToolData(ToolData*) override;
 	virtual HRESULT QueryIndInsertObject(int index, const CIndexableInsert**) override;
+	virtual HRESULT RequestNewInsert(int* index_inout);
+	virtual HRESULT RequestRemoveInsert(int index);
 	virtual HRESULT ShowPoint(gp_Pnt, bool) override;
 	virtual HRESULT RefreshCutter(int index, IndInsert*) override;
 

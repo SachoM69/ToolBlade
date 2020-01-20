@@ -75,7 +75,12 @@ BEGIN_MESSAGE_MAP(CTB_DesDlg, CDialog)
 	//	ON_NOTIFY(NM_THEMECHANGED, IDC_ACTIVEEDGEPOS, &CTB_DesDlg::OnNMThemeChangedActiveedgepos)
 	//	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_ACTIVEEDGEPOS, &CTB_DesDlg::OnNMReleasedcaptureActiveedgepos)
 	ON_BN_CLICKED(IDC_REFRESH, &CTB_DesDlg::OnBnClickedRefresh)
-	ON_EN_CHANGE(IDC_EDIT1, &CTB_DesDlg::OnEnChangeEdit1)
+	//	ON_EN_CHANGE(IDC_EDIT1, &CTB_DesDlg::OnEnChangeEdit1)
+	ON_NOTIFY(NM_RCLICK, IDC_IILIST, &CTB_DesDlg::OnNMRClickIilist)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_IILIST, &CTB_DesDlg::OnLvnItemchangedIilist)
+	ON_COMMAND(ID_INSERTLIST_DELETE, &CTB_DesDlg::MenuBtnDelete)
+	ON_COMMAND(ID_INSERTLIST_EDIT, &CTB_DesDlg::MenuBtnEdit)
+	ON_COMMAND(ID_INSERTLIST_NEW, &CTB_DesDlg::MenuBtnNew)
 END_MESSAGE_MAP()
 
 
@@ -84,6 +89,7 @@ END_MESSAGE_MAP()
 BOOL CTB_DesDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+	ListViewContextMenu.LoadMenuW(IDR_INSERT_LIST_EDIT);
 	IndInsert a;
 	InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
 	SetComplexStruct(&a);
@@ -100,13 +106,8 @@ BOOL CTB_DesDlg::OnInitDialog()
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONSHOWN));
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONHIDDEN));
 	IndInsListView.SetImageList(ImageList, LVSIL_SMALL);
-	for(auto i=0; i<b.ActualToothCount; i++)
-	{
-		IndInsAttributes c;
-		InsertProvider->QueryIndInsertAttributes(i, &c);
-		CString a; a.Format(_T("%d"), i);
-		IndInsListView.InsertItem(i, a, c.IsDisabled);
-	}
+	//TODO IndInsListView.SetExtendedStyle(LVS_EX_CHECKBOXES);
+	UpdateInsertList();
 	ToolTypeList.SetCurSel(b.ToolType);
 	CuttingDirList.SetCurSel(b.CutDirection);
 //	int index; const CIndexableInsert* object;
@@ -737,10 +738,31 @@ void CTB_DesDlg::OnList_Dblclk(NMHDR *pNMHDR, LRESULT *pResult)
 		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
 		SetComplexStruct(&a);
 		UnpackDlgData();
+		UpdateInsertListSoft();
+	} else
+	{
+		int index = CurrentIndex;
+		InsertProvider->RequestNewInsert(&index);
+		InsertProvider->UpdateIndInsertInformation(index, &a);
+		CurrentIndex = index;
+		UpdateInsertList();
 	}
 
 	*pResult = 0;
 }
+
+void CTB_DesDlg::OnNMRClickIilist(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	POINT cl_pos = pNMItemActivate->ptAction;
+	IndInsListView.ClientToScreen(&cl_pos);
+	int click_x, click_y;
+	click_x = cl_pos.x;
+	click_y = cl_pos.y;
+	ListViewContextMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN, click_x, click_y, this);
+	*pResult = 0;
+}
+
 
 
 void CTB_DesDlg::OnCbnSelchangeActiveedge()
@@ -783,9 +805,107 @@ void CTB_DesDlg::OnBnClickedRefresh()
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
 }
 
-
-void CTB_DesDlg::OnEnChangeEdit1()
+void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	int cnt = TeethCntSpin.GetScrollPos(0);
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	int index = pNMLV->iItem;
+	IndInsAttributes atrs;
+	InsertProvider->QueryIndInsertAttributes(index, &atrs);
+	atrs.IsDisabled = (pNMLV->uNewState==1);
+	InsertProvider->UpdateIndInsertAttributes(index, &atrs);
+	*pResult = 0;
+}
 
+// меняем заголовок активной пластины
+void CTB_DesDlg::UpdateInsertListSoft(void)
+{
+	ToolData b;
+	InsertProvider->QueryToolData(&b);
+	for(auto i=0; i<b.ActualToothCount; i++)
+	{
+		CString a;
+		if(i!=CurrentIndex) a.Format(_T("%d"), i);
+		else a.Format(_T("%d (активна)"), i);
+		IndInsListView.SetItemText(i, 0, a);
+	}
+}
+
+
+// перечитываем список пластин из документа
+void CTB_DesDlg::UpdateInsertList(void)
+{
+	ToolData b;
+	InsertProvider->QueryToolData(&b);
+	IndInsListView.DeleteAllItems();
+	for(auto i=0; i<b.ActualToothCount; i++)
+	{
+		IndInsAttributes c;
+		InsertProvider->QueryIndInsertAttributes(i, &c);
+		CString a;
+		if(i!=CurrentIndex) a.Format(_T("%d"), i);
+		else a.Format(_T("%d (активна)"), i);
+		IndInsListView.InsertItem(i, a, c.IsDisabled);
+	}
+}
+
+void CTB_DesDlg::MenuBtnDelete()
+{
+	int sel = IndInsListView.GetSelectionMark();
+	if(sel!=-1)
+	{
+		InsertProvider->RequestRemoveInsert(sel);
+		if(sel<CurrentIndex) CurrentIndex--;
+		
+		int closest_index = -1;
+		IndInsert a;
+		for(int i=CurrentIndex; i>=0; i--)
+		{
+			if(InsertProvider->QueryIndInsertInformation(i, &a)==S_OK)
+			{
+				closest_index=i; break;
+			}
+		}
+		if(closest_index==-1)
+		{
+			InsertProvider->RequestNewInsert(&closest_index);
+		}
+		CurrentIndex=closest_index;
+		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
+		SetComplexStruct(&a);
+		UnpackDlgData();
+		UpdateInsertList();
+	}
+}
+
+void CTB_DesDlg::MenuBtnEdit()
+{
+	IndInsert a;
+	CollectDlgData();
+	GetComplexStruct(&a);
+	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	UpdateInsertListSoft();
+
+	int sel = IndInsListView.GetSelectionMark();
+	if(sel!=-1)
+	{
+		CurrentIndex=sel;
+		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
+		SetComplexStruct(&a);
+		UnpackDlgData();
+		UpdateInsertListSoft();
+	}
+}
+
+void CTB_DesDlg::MenuBtnNew()
+{
+	IndInsert a;
+	CollectDlgData();
+	GetComplexStruct(&a);
+	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	
+	int index = CurrentIndex;
+	InsertProvider->RequestNewInsert(&index);
+	InsertProvider->UpdateIndInsertInformation(index, &a);
+	CurrentIndex = index;
+	UpdateInsertList();
 }
