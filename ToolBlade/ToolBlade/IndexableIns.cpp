@@ -244,13 +244,13 @@ void CIndexableIns::rtrm_chamfer()
 	double d = IInst.Dim, r = IInst.r;
 	double r1 = r;
 	int n = IInst.n;
-	int pts_per_edge = 3;
+	int pts_per_edge = 2;
 	UINT len = pts_per_edge * n + 1;
 	//очистка и подготовка массивов
 	//массив контрольных точек кривой
-	node_p.clear();
-	node_p.reserve(len);
-	node_p.resize(pts_per_edge);
+	std::vector<gp_Pnt> control_pts;
+	control_pts.reserve(len);
+	control_pts.resize(pts_per_edge);
 	//массивы весов и порядков
 	weight.clear();
 	weight.reserve(len);
@@ -267,26 +267,9 @@ void CIndexableIns::rtrm_chamfer()
 	ksi = 2 * pi / n - pi + IInst.eps;
 	eps1 = pi - ksi;
 
-	node_p[2] = gp_Pnt(r * sin(pi / 2 - eps2), (d * 0.5 - r) / seps2 + r * cos(0.5 * pi - eps2), 0.);
-	auto sharp_vertex = gp_Pnt(-0.5 * d * sin(pi / n) / cos(0.5 * ksi), 0.5 * d * cos(pi / n) / cos(0.5 * ksi), 0);
-	gp_Pnt p3 = gp_Pnt(-0.5 * d * sin(0.5 * pi - eps2), 0.5 * d * cos(0.5 * pi - eps2), 0);
-	Standard_Real dist = p3.Distance(sharp_vertex);
-	gp_Pnt p5 = gp_Pnt(-0.5 * d * sin(pi / n + 0.5 * ksi), 0.5 * d * cos(pi / n + 0.5 * ksi), 0);
-	Standard_Real t = r1 / tan(eps1 * 0.5) / dist;
-	gp_Vec v34 = gp_Vec(sharp_vertex, p3);
-	v34.Scale(t);
-	node_p[1] = sharp_vertex.Translated(v34);
-	gp_Vec v54 = gp_Vec(sharp_vertex, p5);
-	v54.Scale(t);
-	node_p[0] = sharp_vertex.Translated(v54);
+	control_pts[1] = gp_Pnt(0., 0.5 * d / seps2, 0);
+	control_pts[0] = gp_Pnt(-0.5 * d * sin(pi / n) / cos(0.5 * ksi), 0.5 * d * cos(pi / n) / cos(0.5 * ksi), 0);
 
-
-	weight.push_back(1.);
-	weight.push_back(1.);
-	weight.push_back(1.);
-
-	d_order.push_back(1);
-	d_order.push_back(1);
 
 	Standard_Real psi = 2 * pi / n;
 
@@ -295,15 +278,26 @@ void CIndexableIns::rtrm_chamfer()
 		double psii = psi * i;
 		for (int j = 0; j < pts_per_edge; j++)
 		{
-			node_p.push_back(node_p[j].Rotated(gp::OZ(), psii));
-			weight.push_back(weight[j]);
+			control_pts.push_back(control_pts[j].Rotated(gp::OZ(), psii));
 		}
-		d_order.push_back(1);
-		d_order.push_back(1);
 	}
+	control_pts.push_back(control_pts[0]);
+
+	for (int i = 1; i < control_pts.size(); i++)
+	{
+		gp_Vec lin_dir = gp_Vec(control_pts[i - 1], control_pts[i]);
+		lin_dir.Normalize();
+		lin_dir *= r;
+		node_p.push_back(gp_Pnt((lin_dir + control_pts[i].XYZ()).XYZ()));
+		node_p.push_back(gp_Pnt((lin_dir - control_pts[i - 1].XYZ()).XYZ()));
+		d_order.push_back(1);
+		d_order.push_back(1);
+		weight.push_back(1.);
+		weight.push_back(1.);
+	}
+
+		weight.push_back(1.);
 	node_p.push_back(node_p[0]);
-	weight.push_back(1.);
-	d_order.push_back(1);
 }
 
 void CIndexableIns::nn()//, void** w, void** darr)
@@ -618,7 +612,7 @@ TopoDS_Shape CIndexableIns::ConstructToolBlade()
 
 int CIndexableIns::NumPoint() const
 {
-	return npmain.size();
+	return int(npmain.size());
 }
 
 void CIndexableIns::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
