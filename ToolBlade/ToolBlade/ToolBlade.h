@@ -52,7 +52,7 @@ struct IndInsert
 	wchar_t FormChar;
 	int n;//число вершин
 	double eps;//угол при вершине
-	double RackAng;//валичина заднего угла
+	double RackAng;//величина заднего угла
 	int HT;//Наличие и форма отверстия
 	int VertForm;//форма вершины
 	double r;//радиус округления вершины
@@ -71,5 +71,11 @@ class CIndexableInsert
 {
 public:
 	virtual int NumPoint() const = 0;//число контрольных точек, лежащих на контуре пластины
-	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const = 0;//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
+	//Координаты точки, лежащей на контуре пластины, 
+	// n- номер точки в массиве узловых точек node_p
+	// t - координата точки на кромке, 0..1
+	// P - получившаяся точка
+	// V - вектор касательной
+	// Ax3 - система координат в точке
+	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const = 0;
 };

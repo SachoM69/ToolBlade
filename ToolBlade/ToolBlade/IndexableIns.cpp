@@ -569,4 +569,3 @@ void CIndexableIns::IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3)//Коор
 	Ax3=gp_Ax3(P,N,V);
 }
 
-

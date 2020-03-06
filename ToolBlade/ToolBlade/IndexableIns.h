@@ -27,24 +27,18 @@ public:
 //	void SetData(Standard_CString);
 	TopoDS_Shape ConstructToolBlade();
 //	void ReadRealVals(void);
+	// Функции создания геометрии.
 	void rrm();//Равносторонние равноугольные
 	void rrrm();//круглая пластина
 	void rtrm();//Равносторонние неравноугольные и ромбические с округленными вершинами
 	void rtrm_sh();//Равносторонние неравноугольные и ромбические с острыми вершинами
 	void nn();//Неравносторонние неравноугольные
+
+	// Внешние функции
 	virtual int NumPoint() const override;//число контрольных точек, лежащих на контуре пластины
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const override;//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
 	void IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3);
 	void swap(CIndexableIns&);
 	
+	friend class CIndInsTooth;
 };
-
-/*class CIndexableInsESEA : public CIndexableIns //равносторонние и равноугольные
-{
-
-public:
-	CIndexableInsESEA(void);
-	CIndexableInsESEA(Standard_CString);
-	~CIndexableInsESEA(void);
-	virtual TopoDS_Shape ConstructToolBlade() override;
-};*/

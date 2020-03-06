@@ -53,6 +53,7 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
 #include <GC_MakeSegment.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_CartesianPoint.hxx>
