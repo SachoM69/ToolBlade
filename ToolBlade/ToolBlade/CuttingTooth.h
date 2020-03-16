@@ -51,6 +51,7 @@ public:
 	virtual gp_Vec ft(int PointIndex, double ti) = 0;
 	virtual gp_Pnt fK(int PointIndex, double ti) = 0;
 	virtual double ftY(int iY0, int i) = 0;
+	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) = 0;
 
 protected:
 	// исходные данные
@@ -84,10 +85,11 @@ public:
 	virtual void CalcCutterAngles(gp_Pln main_plane, ToolType tt, DirToolType dtt) = 0;
 
 	// вспомогательные функции из маткада
-	virtual gp_Vec ft(int PointIndex, double ti);
-	virtual gp_Pnt fK(int PointIndex, double ti);
+	virtual gp_Vec ft(int PointIndex, double ti) override;
+	virtual gp_Pnt fK(int PointIndex, double ti) override;
 					 // ”наследовано через CCuttingTooth
 	virtual double ftY(int iY0, int i) override;
+	virtual void ContourProminentPoints(double& iK0maxX, double& iK0maxY, int index) override;
 
 protected:
 	CIndexableIns* IndIns;

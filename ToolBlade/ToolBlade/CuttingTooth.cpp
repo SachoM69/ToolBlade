@@ -139,11 +139,19 @@ void CCuttingTooth::CalculateTipMatrix()
 	gp_Mat Fpl0;
 	Fpl0 = Ml0 * Mp0.Powered(-1);
 
+	int iK0maxX, iK0maxY;
+	ContourProminentPoints(iK0maxX, iK0maxY, 0);
+	double ty = ftY(iK0maxY, 1);
+	double tx = ftY(iK0maxX, 0);
+	gp_XYZ pmaxY = fK(int(floor(ty)), remainder(ty, 1.)).XYZ() * Fpl0;
+	gp_XYZ pmaxX = fK(int(floor(tx)), remainder(tx, 1.)).XYZ() * Fpl0;
+
 	gp_Vec Fpl1;
-	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX[0], -pmaxY[0]) + plx);
-	Fpl1.SetY(-pmaxY[1] + ply);
-	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX[2], -pmaxY[2]);
-	gp_Trsf Fpl = gp_Trsf(Fpl0);
+	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Coord(0): -pmaxY.Coord(0)) + plx);
+	Fpl1.SetY(-pmaxY.Coord(1) + ply);
+	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Coord(2): -pmaxY.Coord(2));
+	gp_Trsf Fpl;
+	Fpl.SetTransformation(Fpl0);
 	Fpl.SetTranslationPart(Fpl1);
 }
 
