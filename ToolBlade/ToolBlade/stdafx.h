@@ -81,6 +81,7 @@
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 #include <gp_Vec2d.hxx>
+#include <gp_Quaternion.hxx>
 #include <MMgt_TShared.hxx>
 #include <OSD_Environment.hxx>
 #include <Precision.hxx>
@@ -134,6 +135,7 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
 #include <TopoDS_Compound.hxx>
+#include <TopoDS_Iterator.hxx>
 #include <TopoDS_ListIteratorOfListOfShape.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Solid.hxx>

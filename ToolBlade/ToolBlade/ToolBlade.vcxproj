@@ -112,7 +112,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>TKernel.lib;TKGeomBase.lib;TKTopAlgo.lib;TKOffset.lib;TKBool.lib;TKPrim.lib;TKFillet.lib;TKMath.lib;TKService.lib;TKV3d.lib;TKBrep.lib;TKIGES.lib;TKSTL.lib;TKVRML.lib;TKSTEP.lib;TKG3d.lib;TKG2d.lib;TKXSBase.lib;TKShHealing.lib;TKBO.lib</AdditionalDependencies>
+      <AdditionalDependencies>TKernel.lib;TKGeomBase.lib;TKGeomAlgo.lib;TKTopAlgo.lib;TKOffset.lib;TKBool.lib;TKPrim.lib;TKFillet.lib;TKMath.lib;TKService.lib;TKV3d.lib;TKBrep.lib;TKIGES.lib;TKSTL.lib;TKVRML.lib;TKSTEP.lib;TKG3d.lib;TKG2d.lib;TKXSBase.lib;TKShHealing.lib;TKBO.lib</AdditionalDependencies>
       <OutputFile>$(SolutionDir)..\BuildOutput\$(Configuration)\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>

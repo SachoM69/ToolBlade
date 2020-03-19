@@ -2,6 +2,8 @@ struct IndInsert;
 class CIndexableInsert;
 __declspec(dllexport) void SetWndHandle(HWND hWnd);
 __declspec(dllexport) CIndexableInsert* InsertShape(Handle_AIS_InteractiveContext, const IndInsert*, Standard_Boolean RebuildAnyway = Standard_True);
+//Добавляет формы режущей пластины в контекст с данными, передаваемыми через запись
+__declspec(dllexport) CIndexableInsert* InsertRotatedShape(Handle_AIS_InteractiveContext AISC, const IndInsert* IIt, Standard_Boolean Reconstruct);
 extern Handle_AIS_Shape CuttingPlate;
 
 //enum GroupCapt { GCP_ESEA = '0', GCP_ESNA = '1', GCP_NSEA = '2', GCP_NSNA = '3' };

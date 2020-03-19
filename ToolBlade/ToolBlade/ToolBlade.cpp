@@ -6,6 +6,7 @@
 #include <math.h>
 #include "Degrees.hxx"
 #include "IndexableIns.h"
+#include "CuttingTooth.h"
 //#include "IndexableIns.cpp"
 
 Handle_AIS_Shape CuttingPlate;
@@ -68,6 +69,29 @@ __declspec(dllexport) void SetWndHandle(HWND hWnd)
 		AISC->SetDisplayMode(AIS_Shaded, true);
 		AISC->Display(CuttingPlate, true);
 	} else
+	{
+		PrefdIndIns->ConstructToolBlade();
+	}
+	return PrefdIndIns;
+}
+
+
+//Добавляет формы режущей пластины в контекст с данными, передаваемыми через запись
+__declspec(dllexport) CIndexableInsert* InsertRotatedShape(Handle_AIS_InteractiveContext AISC, const IndInsert* IIt, Standard_Boolean Reconstruct)
+{
+	if (Reconstruct && AISC->DisplayStatus(CuttingPlate) == AIS_DS_Displayed) AISC->Erase(CuttingPlate, true);
+	CIndexableIns* PrefdIndIns = new CIndexableIns(IIt);
+	if (Reconstruct)
+	{
+		PrefdIndIns->ConstructToolBlade();
+		CIndInsTooth mi(20, 40, 4, 200, Turning_Cutter, DirTool_Right, PrefdIndIns);
+		mi.SetTipParameters(0, 0.5);
+		mi.CalcCutterAngles();
+		CuttingPlate = new AIS_Shape(mi.RotatedIntoPlace());
+		AISC->SetDisplayMode(AIS_Shaded, true);
+		AISC->Display(CuttingPlate, true);
+	}
+	else
 	{
 		PrefdIndIns->ConstructToolBlade();
 	}

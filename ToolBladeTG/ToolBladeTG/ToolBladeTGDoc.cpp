@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CToolBladeTGDoc, CDocument)
 	ON_COMMAND(ID_NEW_CUTTER, &CToolBladeTGDoc::OnNewCutter)
 	ON_COMMAND(ID_EDPARAMS, &CToolBladeTGDoc::OnEdparams)
 	ON_COMMAND(ID_TOOLTYPE, &CToolBladeTGDoc::OnTooltype)
+	ON_COMMAND(ID_SHOWTOOL, &CToolBladeTGDoc::OnShowtool)
 END_MESSAGE_MAP()
 
 
@@ -355,4 +356,40 @@ HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, bool show)
 		myAISContext->Display(VisPnt, true);
 	}
 	return S_OK;
+}
+
+void CToolBladeTGDoc::OnShowtool()
+{
+	try
+	{
+		/*if(!CutterParams)
+			InsertShape(myAISContext);
+		else */
+		if (CutterParams[0].libcpptr) delete CutterParams[0].libcpptr;
+		CutterParams[0].libcpptr = InsertRotatedShape(myAISContext, &CutterParams.begin()->libdata, true); // не самый красивый способ
+		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
+		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
+		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
+		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
+		//for (int i=0; i<3; i++) 
+		for each (auto & mca in MyCoolArrow)
+			myAISContext->Display(mca, true);
+
+	}
+	catch (Standard_OutOfRange & e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_NullObject & e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_NoSuchObject & e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_Failure & e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
 }

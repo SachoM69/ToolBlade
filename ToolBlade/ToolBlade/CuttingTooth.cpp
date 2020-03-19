@@ -115,7 +115,7 @@ void CCuttingTooth::CalculateTipCoordinates()
 }
 
 // вычисление ‘пл
-void CCuttingTooth::CalculateTipMatrix()
+void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 {
 	gp_Ax3 pseg, wseg;
 	double majorKt = MainEdgeN + MainEdgeT;
@@ -136,8 +136,8 @@ void CCuttingTooth::CalculateTipMatrix()
 	gp_Mat Mp0, Ml0;
 	Mp0.SetRows(ip, jp, kp);
 	Ml0.SetRows(il, jl, kl);
-	gp_Mat Fpl0;
-	Fpl0 = Ml0 * Mp0.Powered(-1);
+	auto mp0I = Mp0.Inverted();
+	Fpl0 = Ml0 * mp0I;
 
 	int iK0maxX, iK0maxY;
 	ContourProminentPoints(iK0maxX, iK0maxY, 0);
@@ -147,27 +147,25 @@ void CCuttingTooth::CalculateTipMatrix()
 	gp_XYZ pmaxX = fK(int(floor(tx)), remainder(tx, 1.)).XYZ() * Fpl0;
 
 	gp_Vec Fpl1;
-	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Coord(0): -pmaxY.Coord(0)) + plx);
-	Fpl1.SetY(-pmaxY.Coord(1) + ply);
-	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Coord(2): -pmaxY.Coord(2));
-	gp_Trsf Fpl;
-	Fpl.SetTransformation(Fpl0);
-	Fpl.SetTranslationPart(Fpl1);
+	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.X(): -pmaxY.X()) + plx);
+	Fpl1.SetY(-pmaxY.Y() + ply);
+	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Z(): -pmaxY.Z());
+	Fpl.SetTransformation(gp_Quaternion(Fpl0), Fpl1);
 }
 
-void CCuttingTooth::CalcCutterAngles(gp_Pln main_plane)
+void CCuttingTooth::PlaneFromMatrixAndCoordinates()
 {
-	Handle_Geom_Surface srf = new Geom_Plane(main_plane);
-	gp_Vec tangent;
-	gp_Ax3 path_params;
-	std::vector<gp_Pnt> projected_pts;
-	for each (const gp_Pnt & vert_pt in this->node_p)
-	{
-		gp_Pnt project = GeomAPI_ProjectPointOnSurf(vert_pt, srf);
-		projected_pts.push_back(project);
-	}
+	gp_Pln res;
+	res.Transform(Fpl);
+	PrincipalPlane = res;
+}
 
+void CCuttingTooth::CalcCutterAngles()
+{
+	CalculateMatrixOfPrincipalPlane();
 	CalculateTipCoordinates();
+	PlaneFromMatrixAndCoordinates();
+	ProjectContourToPlane();
 }
 
 ////////////////////// CIndInsTooth ////////////////////////
@@ -212,13 +210,78 @@ gp_Pnt CIndInsTooth::fK(int PointIndex, double ti)
 	IndIns->curves[PointIndex]->D0(ti, pt_on_cv);
 	return pt_on_cv;
 }
+
+#define dK 9
+
 double CIndInsTooth::ftY(int iY0, int i)
 {
 	double troot = 0;
 	int t0 = iY0/dK;
 	int t1 = t0 + 1;
 	if (IndIns->d_order[t0] == 2) troot = double(iY0) / dK;
-	else troot = sqrt()
-	return gp_Pnt();
+	else troot = sqrt(0);
+	return troot;
 }
-;
+void CIndInsTooth::ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index)
+{
+	int count = IndIns->NumPoint();
+	gp_Pnt K0max = K0(0);
+	iK0maxX = 0;
+	iK0maxY = 0;
+	int ix = -1;
+	int iy = -1;
+	int sg = MainEdgeDir;
+	for (int i = 0; i < count; i++)
+	{
+		int li = i - 1; if (li < 0) li += count;
+		int ni = i + 1; if (ni >= count) ni -= count;
+		double KOi = K0(i).Y() * sg;
+		if (iy < index && K0(li).Y() * sg > KOi && KOi < K0(ni).Y() * sg)
+		{
+			iy++;
+			iK0maxY = i;
+		}
+		KOi = K0r(i).X();
+		if (K0r(li).X() < KOi && KOi >= K0r(ni).X())
+		{
+			ix++;
+			iK0maxX = i;
+		}
+	}
+}
+void CIndInsTooth::ProjectContourToPlane()
+{
+	Handle_Geom_Surface srf = new Geom_Plane(PrincipalPlane);
+	gp_Vec tangent;
+	gp_Ax3 path_params;
+	for each (const gp_Pnt & vert_pt in IndIns->node_p)
+	{
+		gp_Pnt project = GeomAPI_ProjectPointOnSurf(vert_pt, srf);
+		ProjectedPts.push_back(project);
+	}
+}
+gp_Pnt CIndInsTooth::K0(int index)
+{
+	gp_Pnt res;
+	res = Fpl0 * IndIns->node_p[index].XYZ();
+	return res;
+}
+
+#define ROUND_TO_5(x) (round((x)*100000)/100000)
+
+gp_Pnt CIndInsTooth::K0r(int index)
+{
+	gp_Pnt res = K0(index);
+	gp_XYZ& pc = res.ChangeCoord();
+	pc.SetCoord(ROUND_TO_5(pc.X()), ROUND_TO_5(pc.Y()), ROUND_TO_5(pc.Z()));
+	return res;
+}
+
+TopoDS_Shape CIndInsTooth::RotatedIntoPlace()
+{
+	TopoDS_Shape shp = IndIns->ConstructToolBlade();
+	shp.Move(TopLoc_Location(Fpl));
+	return shp;
+}
+
+#undef ROUND_TO_5

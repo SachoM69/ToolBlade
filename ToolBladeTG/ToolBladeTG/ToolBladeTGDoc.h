@@ -88,4 +88,5 @@ public:
 	afx_msg void OnNewCutter();
 	afx_msg void OnEdparams();
 	afx_msg void OnTooltype();
+	afx_msg void OnShowtool();
 };

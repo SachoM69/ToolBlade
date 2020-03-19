@@ -41,11 +41,14 @@ public:
 	// main_plane - основная плоскость, на которую проецируется пластина
 	// n - номер кромки
 	// t - координата на кромке, 0..1
-	void CalcCutterAngles(gp_Pln main_plane);
+	void CalcCutterAngles();
+	virtual TopoDS_Shape RotatedIntoPlace() = 0;
 
 	// Расчет положения вершины пластины в инструменте
 	void CalculateTipCoordinates();
-	void CalculateTipMatrix();
+	void CalculateMatrixOfPrincipalPlane();
+	void PlaneFromMatrixAndCoordinates();
+	virtual void ProjectContourToPlane() = 0;
 
 	// вспомогательные функции из маткада
 	virtual gp_Vec ft(int PointIndex, double ti) = 0;
@@ -67,6 +70,10 @@ protected:
 	gp_Ax3 IIMainEdgeAx0;//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке
 	gp_Dir A_gamma;//нормаль к передней поверхности зуба
 	Standard_Real plx, ply; // координаты вершины
+	gp_Mat Fpl0; // матрица поворота в положение в инструменте
+	gp_Trsf Fpl;
+	gp_Pln PrincipalPlane;
+	std::vector<gp_Pnt> ProjectedPts;
 };
 
 //
@@ -78,18 +85,16 @@ public:
 	gp_Trsf GetFI_Edge0();
 	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3);
 
-	// рассчитать углы положения пластины в инструменте и запомнить их.
-	// main_plane - основная плоскость, на которую проецируется пластина
-	// n - номер кромки
-	// t - координата на кромке, 0..1
-	virtual void CalcCutterAngles(gp_Pln main_plane, ToolType tt, DirToolType dtt) = 0;
-
 	// вспомогательные функции из маткада
 	virtual gp_Vec ft(int PointIndex, double ti) override;
 	virtual gp_Pnt fK(int PointIndex, double ti) override;
 					 // Унаследовано через CCuttingTooth
 	virtual double ftY(int iY0, int i) override;
-	virtual void ContourProminentPoints(double& iK0maxX, double& iK0maxY, int index) override;
+	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) override;
+	virtual void ProjectContourToPlane() override;
+	gp_Pnt K0(int index);
+	gp_Pnt K0r(int index);
+	virtual TopoDS_Shape RotatedIntoPlace() override;
 
 protected:
 	CIndexableIns* IndIns;

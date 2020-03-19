@@ -9,4 +9,7 @@
     <LocalDebuggerWorkingDirectory>C:\OpenCASCADE6.6.0\ros\win32\vc9\bin</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup>
+    <RESOURCE_FILE>ToolBladeTG.rc</RESOURCE_FILE>
+  </PropertyGroup>
 </Project>
