@@ -119,19 +119,20 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 {
 	gp_Ax3 pseg, wseg;
 	double majorKt = MainEdgeN + MainEdgeT;
-	gp_Vec v = ft(MainEdgeN, MainEdgeT)* MainEdgeDir;
+	gp_Vec v = ft(MainEdgeN, MainEdgeT) * MainEdgeDir;
 
 	gp_XYZ ip, jp, kp;
 	gp_XYZ il, jl, kl;
 	ip = v.XYZ();
 	kp.SetCoord(0., 0., 1.);
-	jp = kp.Multiplied(ip) / (kp.CrossMagnitude(ip));
+	jp = kp.Crossed(ip);
+	jp /= jp.Modulus();
 	il.SetCoord(cos(lambda) * cos(phi), MainEdgeDir * cos(lambda) * sin(phi), sin(lambda));
 	kl.SetX(-cos(gamma) * cos(phi) * sin(lambda) - sin(gamma) * cos(lambda) * sin(phi));
 	kl.SetY(MainEdgeDir * (sin(gamma) * cos(phi) * cos(lambda) - cos(gamma) * sin(phi) * sin(lambda)));
 	kl.SetZ(cos(gamma) * cos(lambda));
 	kl.Normalize();
-	jl = kl.Multiplied(il);
+	jl = kl.Crossed(il);
 
 	gp_Mat Mp0, Ml0;
 	Mp0.SetRows(ip, jp, kp);
@@ -162,8 +163,8 @@ void CCuttingTooth::PlaneFromMatrixAndCoordinates()
 
 void CCuttingTooth::CalcCutterAngles()
 {
-	CalculateMatrixOfPrincipalPlane();
 	CalculateTipCoordinates();
+	CalculateMatrixOfPrincipalPlane();
 	PlaneFromMatrixAndCoordinates();
 	ProjectContourToPlane();
 }
@@ -201,6 +202,7 @@ gp_Vec CIndInsTooth::ft(int PointIndex, double ti)
 	gp_Pnt pt_on_cv;
 	gp_Vec tan_to_cv;
 	IndIns->curves[PointIndex]->D1(ti, pt_on_cv, tan_to_cv);
+	tan_to_cv.Normalize();
 	return tan_to_cv;
 }
 

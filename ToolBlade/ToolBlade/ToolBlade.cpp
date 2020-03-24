@@ -84,8 +84,8 @@ __declspec(dllexport) CIndexableInsert* InsertRotatedShape(Handle_AIS_Interactiv
 	if (Reconstruct)
 	{
 		PrefdIndIns->ConstructToolBlade();
-		CIndInsTooth mi(20, 40, 4, 200, Turning_Cutter, DirTool_Right, PrefdIndIns);
-		mi.SetTipParameters(0, 0.5);
+		CIndInsTooth mi(-10, 40, 10, 20, Turning_Cutter, DirTool_Right, PrefdIndIns);
+		mi.SetTipParameters(0, 0.6);
 		mi.CalcCutterAngles();
 		CuttingPlate = new AIS_Shape(mi.RotatedIntoPlace());
 		AISC->SetDisplayMode(AIS_Shaded, true);
