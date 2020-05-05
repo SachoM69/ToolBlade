@@ -545,7 +545,7 @@ TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 
 int CIndexableInsert::NumPoint() const
 {
-	return npmain.size();
+	return int(npmain.size());
 }
 
 void CIndexableInsert::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p

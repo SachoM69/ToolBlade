@@ -66,7 +66,6 @@ struct IndInsParameters
 	double DHole;//диаметр отверстия
 	double B, L; //размеры пластин 3й и 4й групп 
 	wchar_t TolClass; //обозначение класса допуска
-	int ActEdge; //активная кромка
 };
 
 struct IndInsOrientation

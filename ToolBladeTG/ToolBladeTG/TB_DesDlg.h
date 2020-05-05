@@ -24,8 +24,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	void GetComplexStruct(IndInsert* IIt);
-	void SetComplexStruct(const IndInsert* IIt);
+	void StoreToParams(IndInsParameters* IIt);
+	void LoadFromParams(const IndInsParameters* IIt);
 private:
 	void CollectDlgData();
 	void UnpackDlgData();

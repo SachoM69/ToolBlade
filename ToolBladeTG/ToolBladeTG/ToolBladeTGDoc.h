@@ -32,9 +32,10 @@ public:
 private:
 	struct IndInsData
 	{
-		IndInsert libdata;
+		IndInsParameters libdata;
+		IndInsOrientation liboridata;
 		IndInsAttributes diagdata;
-		CIndexableInsert* libcpptr;
+		IIndexableInsert* libcpptr;
 	};
 	std::vector<IndInsData> CutterParams;
 	ToolData Instrument;
@@ -42,7 +43,8 @@ private:
 	Handle_ISession_Direction PntDirArrow;
 	Handle_AIS_Point VisPnt;
 
-	IndInsert GetDefaultInsert() const;
+	static IndInsParameters GetDefaultInsert();
+	static IndInsOrientation GetDefaultOrientation();
 	// Операции
 public:
 
@@ -54,16 +56,19 @@ public:
 	virtual void InitializeSearchContent();
 	virtual void OnDrawThumbnail(CDC& dc, LPRECT lprcBounds);
 #endif // SHARED_HANDLERS
-	virtual HRESULT QueryIndInsertInformation(int index, IndInsert*) override;
-	virtual HRESULT UpdateIndInsertInformation(int index, const IndInsert*) override;
-	virtual HRESULT QueryIndInsertAttributes(int index, IndInsAttributes*) override;
-	virtual HRESULT UpdateIndInsertAttributes(int index, const IndInsAttributes*) override;
+	virtual HRESULT QueryIndInsInformation(int index, IndInsParameters*) override;
+	virtual HRESULT UpdateIndInsInformation(int index, const IndInsParameters*) override;
+	virtual HRESULT QueryIndInsAttributes(int index, IndInsAttributes*) override;
+	virtual HRESULT UpdateIndInsAttributes(int index, const IndInsAttributes*) override;
+	virtual HRESULT QueryIndInsOrientation(int index, IndInsOrientation*) override;
+	virtual HRESULT UpdateIndInsOrientation(int index, const IndInsOrientation*) override;
 	virtual HRESULT QueryToolData(ToolData*) override;
-	virtual HRESULT QueryIndInsertObject(int index, const CIndexableInsert**) override;
+	virtual HRESULT QueryIndInsObject(int index, const IIndexableInsert**) override;
 	virtual HRESULT RequestNewInsert(int* index_inout);
 	virtual HRESULT RequestRemoveInsert(int index);
 	virtual HRESULT ShowPoint(gp_Pnt, bool) override;
-	virtual HRESULT RefreshCutter(int index, IndInsert*) override;
+	virtual HRESULT RefreshCutter(int index, const IndInsParameters*) override;
+	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) override;
 
 // Реализация
 public:

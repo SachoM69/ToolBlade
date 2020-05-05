@@ -90,9 +90,9 @@ BOOL CTB_DesDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	ListViewContextMenu.LoadMenuW(IDR_INSERT_LIST_EDIT);
-	IndInsert a;
-	InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-	SetComplexStruct(&a);
+	IndInsParameters a;
+	InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+	LoadFromParams(&a);
 	//for (int i=0; i<7; i++) SC[i].SetCurSel(0);
 	//SC1.SetCurSel(0)
 	UnpackDlgData();
@@ -110,8 +110,8 @@ BOOL CTB_DesDlg::OnInitDialog()
 	UpdateInsertList();
 	ToolTypeList.SetCurSel(b.ToolType);
 	CuttingDirList.SetCurSel(b.CutDirection);
-//	int index; const CIndexableInsert* object;
-//	InsertProvider->QueryIndInsertObject(index, &object);
+//	int index; const IIndexableInsert* object;
+//	InsertProvider->QueryIndInsObject(index, &object);
 	ActiveEdgePos.SetRange(0, 100, 0);
 	return true;
 }
@@ -244,12 +244,12 @@ void CTB_DesDlg::UnpackDlgData()
 	IIDimHoleList.SetCurSel(IIn_DHole);
 	SetActiveEdgeList();
 	ActiveEdgeList.SetCurSel(II_ActiveEdge);
-	DrawEdgePoint();
+	//DrawEdgePoint();
 }
 
-void CTB_DesDlg::GetComplexStruct(IndInsert* IIt)
+void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 {
-	IndInsert &II = *IIt;
+	IndInsParameters &II = *IIt;
 	II.IGroup=IGroup;
 	II.IIForm=IIForm;
 	II.FormChar=FormChar;
@@ -269,10 +269,10 @@ void CTB_DesDlg::GetComplexStruct(IndInsert* IIt)
 	II.Dir=II_Dir;//направление резания
 	II.DHole=II_DimHole;
 	II.TolClass=II_TolClass;
-	II.ActEdge=II_ActiveEdge;
+	//II.ActEdge=II_ActiveEdge;
 }
 
-void CTB_DesDlg::SetComplexStruct(const IndInsert* IIt)
+void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 {
 	IGroup=IIt->IGroup;
 	IIForm=IIt->IIForm;
@@ -362,7 +362,7 @@ void CTB_DesDlg::SetComplexStruct(const IndInsert* IIt)
 	IIn_R=sel;
 	II_Dir=IIt->Dir;
 	II_TolClass=IIt->TolClass;
-	II_ActiveEdge=IIt->ActEdge;
+	//II_ActiveEdge=IIt->ActEdge;
 	EdgePos_t = 0;
 	EdgePos = 0;
 
@@ -637,8 +637,8 @@ void CTB_DesDlg::SetDirList()
 
 void CTB_DesDlg::SetActiveEdgeList()
 {
-	const CIndexableInsert* object;
-	InsertProvider->QueryIndInsertObject(CurrentIndex, &object);
+	const IIndexableInsert* object;
+	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	CString S;
 	ActiveEdgeList.ResetContent();
 	for(auto i=0; i<object->NumPoint(); i++)
@@ -669,9 +669,9 @@ void CTB_DesDlg::OnBnClickedOk()
 {
 	CollectDlgData();
 
-	IndInsert a;
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	IndInsParameters a;
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
 
 	CDialog::OnOK();
@@ -724,26 +724,26 @@ void CTB_DesDlg::OnCbnSelchangeIndinsdir()
 void CTB_DesDlg::OnList_Dblclk(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	IndInsert a;
+	IndInsParameters a;
 	if(pNMItemActivate->iItem!=CurrentIndex)
 	{
 		CollectDlgData();
-		GetComplexStruct(&a);
-		InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+		StoreToParams(&a);
+		InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	}
 
 	if(pNMItemActivate->iItem!=-1)
 	{
 		CurrentIndex=pNMItemActivate->iItem;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertListSoft();
 	} else
 	{
 		int index = CurrentIndex;
 		InsertProvider->RequestNewInsert(&index);
-		InsertProvider->UpdateIndInsertInformation(index, &a);
+		InsertProvider->UpdateIndInsInformation(index, &a);
 		CurrentIndex = index;
 		UpdateInsertList();
 	}
@@ -787,8 +787,8 @@ void CTB_DesDlg::OnTRBNThumbPosChangingActiveedgepos(NMHDR *pNMHDR, LRESULT *pRe
 
 void CTB_DesDlg::DrawEdgePoint()
 {
-	const CIndexableInsert* object;
-	InsertProvider->QueryIndInsertObject(CurrentIndex, &object);
+	const IIndexableInsert* object;
+	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	gp_Pnt edgept; gp_Vec V; gp_Ax3 Ax3;
 	object->IIVertex(II_ActiveEdge,EdgePos_t,edgept,V, Ax3);
 	InsertProvider->ShowPoint(edgept,true);
@@ -800,8 +800,8 @@ void CTB_DesDlg::OnBnClickedRefresh()
 {
 	CollectDlgData();
 
-	IndInsert a;
-	GetComplexStruct(&a);
+	IndInsParameters a;
+	StoreToParams(&a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
 }
 
@@ -810,9 +810,9 @@ void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	int index = pNMLV->iItem;
 	IndInsAttributes atrs;
-	InsertProvider->QueryIndInsertAttributes(index, &atrs);
+	InsertProvider->QueryIndInsAttributes(index, &atrs);
 	atrs.IsDisabled = (pNMLV->uNewState==1);
-	InsertProvider->UpdateIndInsertAttributes(index, &atrs);
+	InsertProvider->UpdateIndInsAttributes(index, &atrs);
 	*pResult = 0;
 }
 
@@ -840,7 +840,7 @@ void CTB_DesDlg::UpdateInsertList(void)
 	for(auto i=0; i<b.ActualToothCount; i++)
 	{
 		IndInsAttributes c;
-		InsertProvider->QueryIndInsertAttributes(i, &c);
+		InsertProvider->QueryIndInsAttributes(i, &c);
 		CString a;
 		if(i!=CurrentIndex) a.Format(_T("%d"), i);
 		else a.Format(_T("%d (активна)"), i);
@@ -857,10 +857,10 @@ void CTB_DesDlg::MenuBtnDelete()
 		if(sel<CurrentIndex) CurrentIndex--;
 		
 		int closest_index = -1;
-		IndInsert a;
+		IndInsParameters a;
 		for(int i=CurrentIndex; i>=0; i--)
 		{
-			if(InsertProvider->QueryIndInsertInformation(i, &a)==S_OK)
+			if(InsertProvider->QueryIndInsInformation(i, &a)==S_OK)
 			{
 				closest_index=i; break;
 			}
@@ -870,8 +870,8 @@ void CTB_DesDlg::MenuBtnDelete()
 			InsertProvider->RequestNewInsert(&closest_index);
 		}
 		CurrentIndex=closest_index;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertList();
 	}
@@ -879,18 +879,18 @@ void CTB_DesDlg::MenuBtnDelete()
 
 void CTB_DesDlg::MenuBtnEdit()
 {
-	IndInsert a;
+	IndInsParameters a;
 	CollectDlgData();
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	UpdateInsertListSoft();
 
 	int sel = IndInsListView.GetSelectionMark();
 	if(sel!=-1)
 	{
 		CurrentIndex=sel;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertListSoft();
 	}
@@ -898,14 +898,14 @@ void CTB_DesDlg::MenuBtnEdit()
 
 void CTB_DesDlg::MenuBtnNew()
 {
-	IndInsert a;
+	IndInsParameters a;
 	CollectDlgData();
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	
 	int index = CurrentIndex;
 	InsertProvider->RequestNewInsert(&index);
-	InsertProvider->UpdateIndInsertInformation(index, &a);
+	InsertProvider->UpdateIndInsInformation(index, &a);
 	CurrentIndex = index;
 	UpdateInsertList();
 }

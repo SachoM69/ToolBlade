@@ -26,6 +26,7 @@
 #include "MainFrm.h"
 
 #include "TB_DesDlg.h"
+#include "CTB_OriDlg.h"
 #include "ToolTypeDlg.h"
 
 #ifdef _DEBUG
@@ -49,9 +50,11 @@ END_MESSAGE_MAP()
 CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 {
 	for(int i=0; i<3; i++) MyCoolArrow[i]=0;
-	IndInsert IndIns = GetDefaultInsert();
+	IndInsParameters IndIns = GetDefaultInsert();
+	IndInsOrientation IndOri = GetDefaultOrientation();
 	IndInsData idt;
 	idt.libdata=IndIns;
+	idt.liboridata = IndOri;
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
 	CutterParams.push_back(idt);
@@ -64,9 +67,9 @@ CToolBladeTGDoc::~CToolBladeTGDoc()
 {
 }
 
-IndInsert CToolBladeTGDoc::GetDefaultInsert() const
+IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 {
-	IndInsert IndIns;
+	IndInsParameters IndIns;
 	IndIns.IGroup=0;//номер группы пластины
 	IndIns.IIForm=2;//номер формы пластины
 	IndIns.FormChar='P';
@@ -81,8 +84,22 @@ IndInsert CToolBladeTGDoc::GetDefaultInsert() const
 	IndIns.B=IndIns.L=0;
 	IndIns.eps=0;
 	IndIns.r=0.1;
-	IndIns.ActEdge=0;
+	//IndIns.ActEdge=0;
 	return IndIns;
+}
+
+IndInsOrientation CToolBladeTGDoc::GetDefaultOrientation()
+{
+	IndInsOrientation IndOri;
+	IndOri.Diameter = 0.1;
+	IndOri.Dir = DirTool_Right;
+	IndOri.Type = Turning_Cutter;
+	IndOri.PointIndex = 0;
+	IndOri.EdgePosition = 0;
+	IndOri.Gamma = 0;
+	IndOri.Lambda = 0;
+	IndOri.Phi = 0;
+	return IndOri;
 }
 
 BOOL CToolBladeTGDoc::OnNewDocument()
@@ -184,12 +201,12 @@ void CToolBladeTGDoc::Dump(CDumpContext& dc) const
 
 // команды CToolBladeTGDoc
 
-HRESULT CToolBladeTGDoc::RefreshCutter(int index, IndInsert *a)
+HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsParameters *a)
 {
 	try
 	{
-		if(CutterParams[index].libcpptr) delete CutterParams[index].libcpptr;
-		CutterParams[index].libcpptr = InsertShape(myAISContext, a); // не самый красивый способ
+		if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
+		CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, a);
 		for each(auto& mca in MyCoolArrow) if(!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
 		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
 		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
@@ -218,16 +235,44 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, IndInsert *a)
 	return S_OK;
 }
 
+HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
+{
+	try
+	{
+		if (!CutterParams[index].libcpptr)
+			CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
+		CutterParams[index].libcpptr = OrientInsertAndPreview(myAISContext, CutterParams[index].libcpptr, a);
+		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
+		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
+		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
+		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
+	}
+	catch (Standard_OutOfRange& e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_NullObject& e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_NoSuchObject& e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	catch (Standard_Failure& e)
+	{
+		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
+	}
+	return S_OK;
+}
+
 
 void CToolBladeTGDoc::OnNewCutter()
 {
 	try
 	{
-	/*if(!CutterParams)
-		InsertShape(myAISContext);
-	else */
-		if(CutterParams[0].libcpptr) delete CutterParams[0].libcpptr;
-		CutterParams[0].libcpptr = InsertShape(myAISContext, &CutterParams.begin()->libdata); // не самый красивый способ
+		if(CutterParams[0].libcpptr) DestroyInsert(CutterParams[0].libcpptr);
+		CutterParams[0].libcpptr = CreateInsertAndPreview(myAISContext, &CutterParams.begin()->libdata); // не самый красивый способ
 		for each(auto& mca in MyCoolArrow) if(!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
 		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
 		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
@@ -262,25 +307,25 @@ void CToolBladeTGDoc::OnEdparams()
 	delete NPGetter;
 }
 
-HRESULT CToolBladeTGDoc::QueryIndInsertInformation(int index, IndInsert* res)
+HRESULT CToolBladeTGDoc::QueryIndInsInformation(int index, IndInsParameters* res)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	*res = CutterParams[index].libdata;
 	return S_OK;
 }
-HRESULT CToolBladeTGDoc::UpdateIndInsertInformation(int index, const IndInsert* res)
+HRESULT CToolBladeTGDoc::UpdateIndInsInformation(int index, const IndInsParameters* res)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	CutterParams[index].libdata = *res;
-	if(CutterParams[index].libcpptr) delete CutterParams[index].libcpptr;
-	CutterParams[index].libcpptr = InsertShape(myAISContext, res, Standard_False);
+	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
+	CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, res);
 	return S_OK;
 }
 
 
-HRESULT CToolBladeTGDoc::QueryIndInsertAttributes(int index, IndInsAttributes* res)
+HRESULT CToolBladeTGDoc::QueryIndInsAttributes(int index, IndInsAttributes* res)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
@@ -288,11 +333,27 @@ HRESULT CToolBladeTGDoc::QueryIndInsertAttributes(int index, IndInsAttributes* r
 	return S_OK;
 }
 
-HRESULT CToolBladeTGDoc::UpdateIndInsertAttributes(int index, const IndInsAttributes* res)
+HRESULT CToolBladeTGDoc::UpdateIndInsAttributes(int index, const IndInsAttributes* res)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	CutterParams[index].diagdata = *res;
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::QueryIndInsOrientation(int index, IndInsOrientation* res)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	*res = CutterParams[index].liboridata;
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::UpdateIndInsOrientation(int index, const IndInsOrientation* res)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	CutterParams[index].liboridata = *res;
 	return S_OK;
 }
 
@@ -302,12 +363,12 @@ HRESULT CToolBladeTGDoc::QueryToolData(ToolData* tda)
 	return S_OK;
 }
 
-HRESULT CToolBladeTGDoc::QueryIndInsertObject(int index, const CIndexableInsert** optr)
+HRESULT CToolBladeTGDoc::QueryIndInsObject(int index, const IIndexableInsert** optr)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
-	if(CutterParams[index].libcpptr) delete CutterParams[index].libcpptr;
-	*optr = CutterParams[index].libcpptr = InsertShape(myAISContext, &CutterParams[index].libdata, Standard_False);
+	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
+	*optr = CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, &CutterParams[index].libdata);
 	return S_OK;
 }
 
@@ -331,7 +392,7 @@ HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
 	idt.libcpptr=nullptr;
 	CutterParams.push_back(idt);
 	Instrument.ActualToothCount++; Instrument.UsedToothCount++;
-	*index = CutterParams.size()-1;
+	*index = int(CutterParams.size()-1);
 	return S_OK;
 }
 
@@ -339,7 +400,7 @@ HRESULT CToolBladeTGDoc::RequestRemoveInsert(int index)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
-	if(CutterParams[index].libcpptr) delete CutterParams[index].libcpptr;
+	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
 	Instrument.ActualToothCount--;
 	if(!CutterParams[index].diagdata.IsDisabled) Instrument.UsedToothCount--;
 	CutterParams.erase(index+CutterParams.begin());
@@ -365,15 +426,21 @@ void CToolBladeTGDoc::OnShowtool()
 		/*if(!CutterParams)
 			InsertShape(myAISContext);
 		else */
-		if (CutterParams[0].libcpptr) delete CutterParams[0].libcpptr;
-		CutterParams[0].libcpptr = InsertRotatedShape(myAISContext, &CutterParams.begin()->libdata, true); // не самый красивый способ
+		/*
+		IndInsOrientation a; a.PointIndex = 0; a.Diameter = 0.02; a.Dir = DirTool_Right; a.EdgePosition = 0; a.Phi = 0;
+		a.Gamma = 0; a.Lambda = 0; a.Type = Turning_Cutter;
+		CutterParams[0].libcpptr = OrientInsertAndPreview(myAISContext, CutterParams.begin()->libcpptr, &a); // не самый красивый способ
 		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
 		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
 		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
 		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
 		//for (int i=0; i<3; i++) 
 		for each (auto & mca in MyCoolArrow)
-			myAISContext->Display(mca, true);
+			myAISContext->Display(mca, true);*/
+
+		CTB_OriDlg* NPGetter = new CTB_OriDlg(this);
+		NPGetter->DoModal();
+		delete NPGetter;
 
 	}
 	catch (Standard_OutOfRange & e)

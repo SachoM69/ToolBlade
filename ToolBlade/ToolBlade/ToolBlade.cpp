@@ -26,6 +26,7 @@ __declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_Intera
 	DisplayedShape = new AIS_Shape(iii->ConstructToolBlade());
 	AISC->SetDisplayMode(AIS_Shaded, true);
 	AISC->Display(DisplayedShape, true);
+	thisAISC = AISC;
 	return iii;
 }
 
@@ -41,6 +42,7 @@ __declspec(dllexport) IIndexableInsert* OrientInsertAndPreview(Handle_AIS_Intera
 	DisplayedShape = new AIS_Shape(mi.RotatedIntoPlace());
 	AISC->SetDisplayMode(AIS_Shaded, true);
 	AISC->Display(DisplayedShape, true);
+	thisAISC = AISC;
 	return II;
 }
 
@@ -50,7 +52,7 @@ __declspec(dllexport) void DestroyInsert(const IIndexableInsert* II)
 	const CIndexableInsert* PrefdIndIns = dynamic_cast<const CIndexableInsert*>(II);
 	if (DisplayedInsert == II)
 	{
-		if (thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
+		if (*thisAISC && thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
 		thisAISC.Nullify();
 		DisplayedShape.Nullify();
 	}
