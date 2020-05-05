@@ -80,7 +80,7 @@ protected:
 class CIndInsTooth :public CCuttingTooth
 {
 public:
-	CIndInsTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT, DirToolType DTT, CIndexableIns* vIndIns);
+	CIndInsTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT, DirToolType DTT, CIndexableInsert* vIndIns);
 	~CIndInsTooth();
 	gp_Trsf GetFI_Edge0();
 	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3);
@@ -97,7 +97,7 @@ public:
 	virtual TopoDS_Shape RotatedIntoPlace() override;
 
 protected:
-	CIndexableIns* IndIns;
+	CIndexableInsert* IndIns;
 
 	Standard_Integer II_n;//номер главной режущей кромки пластины
 	Standard_Real II_t;//параметр точки режущей кромки для которой задаются параметры режущей кромки

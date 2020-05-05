@@ -3,7 +3,7 @@
 #include <math.h>
 #include "Degrees.hxx"
 
-void CIndexableIns::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
+void CIndexableInsert::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
 //ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И РАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ
 {
 	double d=IInst.Dim, r=IInst.r;
@@ -73,7 +73,7 @@ void CIndexableIns::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
 	node_p.push_back(node_p[0]);
 	weight.push_back(1);
 }
-void CIndexableIns::rrrm()
+void CIndexableInsert::rrrm()
 {
 	double d=IInst.Dim;
 	UINT len=8;
@@ -108,7 +108,7 @@ void CIndexableIns::rrrm()
 	weight.push_back(1);
 }
 
-void CIndexableIns::rtrm()//, void** w, void** darr)
+void CIndexableInsert::rtrm()//, void** w, void** darr)
 //ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ с округленными вершинами
 {
 	double d=IInst.Dim, r=IInst.r;
@@ -183,7 +183,7 @@ void CIndexableIns::rtrm()//, void** w, void** darr)
 	weight.push_back(1.);
 }
 
-void CIndexableIns::rtrm_sh()//, void** w, void** darr)
+void CIndexableInsert::rtrm_sh()//, void** w, void** darr)
 //ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ с острыми вершинами
 {
 	double d=IInst.Dim, r=IInst.r;
@@ -238,7 +238,7 @@ void CIndexableIns::rtrm_sh()//, void** w, void** darr)
 		d_order.push_back(1);
 }
 
-void CIndexableIns::nn()//, void** w, void** darr)
+void CIndexableInsert::nn()//, void** w, void** darr)
 //ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ НЕРАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ
 {
 	double seps=sin(IInst.eps), ceps=cos(IInst.eps);
@@ -316,7 +316,7 @@ void CIndexableIns::nn()//, void** w, void** darr)
 	}
 }*/
 
-CIndexableIns::CIndexableIns(const IndInsert* IIt)
+CIndexableInsert::CIndexableInsert(const IndInsParameters* IIt)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
 	if(IIt) // конструктор CIndInsCuttingTooth
@@ -324,11 +324,11 @@ CIndexableIns::CIndexableIns(const IndInsert* IIt)
 	else memset(&IInst, 0, sizeof(IInst)); // TODO устанавливать каждое поле
 }
 
-CIndexableIns::~CIndexableIns(void)
+CIndexableInsert::~CIndexableInsert(void)
 {
 }
 
-CIndexableIns::CIndexableIns(const CIndexableIns& src)
+CIndexableInsert::CIndexableInsert(const CIndexableInsert& src)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
 	IInst=src.IInst;
@@ -343,13 +343,13 @@ CIndexableIns::CIndexableIns(const CIndexableIns& src)
 	}
 }
 
-CIndexableIns::CIndexableIns(CIndexableIns&& src)
+CIndexableInsert::CIndexableInsert(CIndexableInsert&& src)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
 	swap(src);
 }
 
-void CIndexableIns::swap(CIndexableIns& src)
+void CIndexableInsert::swap(CIndexableInsert& src)
 {
 	auto b=IInst;
 	IInst=src.IInst;
@@ -459,7 +459,7 @@ CIndexableInsESEA::~CIndexableInsESEA(void)
 {
 }*/
 
-TopoDS_Shape CIndexableIns::ConstructToolBlade()
+TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 {
 	switch(IInst.IGroup)
 	{
@@ -543,12 +543,12 @@ TopoDS_Shape CIndexableIns::ConstructToolBlade()
 }
 
 
-int CIndexableIns::NumPoint() const
+int CIndexableInsert::NumPoint() const
 {
 	return npmain.size();
 }
 
-void CIndexableIns::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
+void CIndexableInsert::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
 {
 	//Координаты расчетной точки и касательная к режущей кромке
 	curves[n]->D1(t,P,V);
@@ -557,7 +557,7 @@ void CIndexableIns::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_
 	Ax3=gp_Ax3(P,N,V);
 }
 
-void CIndexableIns::IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3)//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
+void CIndexableInsert::IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
 {
 
 	gp_Pnt P; 

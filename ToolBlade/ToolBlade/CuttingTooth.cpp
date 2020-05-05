@@ -173,7 +173,7 @@ void CCuttingTooth::CalcCutterAngles()
 
 CIndInsTooth::CIndInsTooth
 	(double vgamma, double vphi, double vlambda, double diameter,
-	ToolType TT, DirToolType DTT, CIndexableIns* vIndIns)
+	ToolType TT, DirToolType DTT, CIndexableInsert* vIndIns)
 	:CCuttingTooth(vgamma, vphi, vlambda, diameter, TT, DTT),
 	IndIns(vIndIns), IIAx(), FI_Edge0(), Ax_Edge0()
 {

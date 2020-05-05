@@ -1,10 +1,12 @@
-struct IndInsert;
-class CIndexableInsert;
-__declspec(dllexport) void SetWndHandle(HWND hWnd);
-__declspec(dllexport) CIndexableInsert* InsertShape(Handle_AIS_InteractiveContext, const IndInsert*, Standard_Boolean RebuildAnyway = Standard_True);
-//Добавляет формы режущей пластины в контекст с данными, передаваемыми через запись
-__declspec(dllexport) CIndexableInsert* InsertRotatedShape(Handle_AIS_InteractiveContext AISC, const IndInsert* IIt, Standard_Boolean Reconstruct);
-extern Handle_AIS_Shape CuttingPlate;
+struct IndInsParameters;
+class IIndexableInsert;
+struct IndInsOrientation;
+
+__declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters*);
+__declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_InteractiveContext, const IndInsParameters*);
+__declspec(dllexport) IIndexableInsert* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* ,const IndInsOrientation* IIt);
+__declspec(dllexport) void DestroyInsert(const IIndexableInsert*);
+//extern Handle_AIS_Shape CuttingPlate;
 
 //enum GroupCapt { GCP_ESEA = '0', GCP_ESNA = '1', GCP_NSEA = '2', GCP_NSNA = '3' };
 //enum GroupCapt { GCP_ESEA = 0, GCP_ESNA = 1, GCP_NSEA = 2, GCP_NSNA = 3 };
@@ -47,7 +49,7 @@ enum ToolType {Turning_Cutter=0, Boring_Cutter=1, Drilling_Tool=2, Milling_Tool=
 */
 
 
-struct IndInsert
+struct IndInsParameters
 {
 	int IGroup;//номер группы пластины
 	int IIForm;//номер формы пластины
@@ -67,9 +69,22 @@ struct IndInsert
 	int ActEdge; //активная кромка
 };
 
+struct IndInsOrientation
+{
+	double Gamma;
+	double Phi;
+	double Lambda;
+	double Diameter;
+	ToolType Type;
+	DirToolType Dir;
+
+	int PointIndex;
+	double EdgePosition;
+};
+
 const double deg=M_PI/180;
 
-class CIndexableInsert
+class IIndexableInsert
 {
 public:
 	virtual int NumPoint() const = 0;//число контрольных точек, лежащих на контуре пластины
@@ -80,4 +95,5 @@ public:
 	// V - вектор касательной
 	// Ax3 - система координат в точке
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const = 0;
+	virtual TopoDS_Shape ConstructToolBlade() = 0;
 };
