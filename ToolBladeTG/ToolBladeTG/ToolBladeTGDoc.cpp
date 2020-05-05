@@ -368,7 +368,7 @@ HRESULT CToolBladeTGDoc::QueryIndInsObject(int index, const IIndexableInsert** o
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
-	*optr = CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, &CutterParams[index].libdata);
+	*optr = CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
 	return S_OK;
 }
 
@@ -386,8 +386,17 @@ HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
 	size_t indop(*index);
 	IndInsData idt;
 	
-	if(*index<0 || indop>=CutterParams.size()) idt.libdata=GetDefaultInsert();
-	else idt.libdata=CutterParams[*index].libdata;
+	if (*index < 0 || indop >= CutterParams.size())
+	{
+		idt.libdata = GetDefaultInsert();
+		idt.liboridata = GetDefaultOrientation();
+	}
+	else
+	{
+		idt.libdata = CutterParams[*index].libdata;
+		idt.liboridata = CutterParams[*index].liboridata;
+
+	}
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
 	CutterParams.push_back(idt);

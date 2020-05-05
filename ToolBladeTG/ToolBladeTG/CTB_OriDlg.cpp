@@ -108,7 +108,11 @@ void CTB_OriDlg::DrawEdgePoint()
 	const IIndexableInsert* object;
 	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	gp_Pnt edgept; gp_Vec V; gp_Ax3 Ax3;
-	object->IIVertex(PointCB.GetCurSel(), PointSl.GetPos() / PointSl.GetRangeMax(), edgept, V, Ax3);
+	int curpos = PointSl.GetPos();
+	int minpos = PointSl.GetRangeMin();
+	int maxpos = PointSl.GetRangeMax();
+	double pos  = double(curpos - minpos) / (maxpos - minpos);
+	object->IIVertex(PointCB.GetCurSel(), pos, edgept, V, Ax3);
 	InsertProvider->ShowPoint(edgept, true);
 	//нарисовать стрелку из точки edgept в направлении V
 }
@@ -174,6 +178,8 @@ void CTB_OriDlg::OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult)
 		InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
 		LoadFromParams(&a);
 		UpdateInsertListSoft();
+		DrawEdgePoint();
+		InsertProvider->RefreshCutter(CurrentIndex, &a);
 	}
 
 	*pResult = 0;

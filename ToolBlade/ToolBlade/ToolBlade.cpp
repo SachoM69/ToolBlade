@@ -15,6 +15,7 @@ IIndexableInsert* DisplayedInsert;
 __declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters* IIt)
 {
 	CIndexableInsert* PrefdIndIns = new CIndexableInsert(IIt);
+	PrefdIndIns->ConstructToolBlade();
 	return dynamic_cast<IIndexableInsert*>(PrefdIndIns);
 }
 
@@ -52,7 +53,7 @@ __declspec(dllexport) void DestroyInsert(const IIndexableInsert* II)
 	const CIndexableInsert* PrefdIndIns = dynamic_cast<const CIndexableInsert*>(II);
 	if (DisplayedInsert == II)
 	{
-		if (*thisAISC && thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
+		if (!thisAISC.IsNull() && thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
 		thisAISC.Nullify();
 		DisplayedShape.Nullify();
 	}
