@@ -168,6 +168,7 @@ void CTB_OriDlg::OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult)
 	IndInsOrientation a;
 	//if (pNMItemActivate->iItem != CurrentIndex)
 	{
+		InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
 		StoreToParams(&a);
 		InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
 	}

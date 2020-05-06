@@ -111,6 +111,8 @@ void CCuttingTooth::CalculateTipCoordinates()
 		plx = tool_diam / 2;
 		ply = 0;
 		break;
+	default:
+		throw std::exception("Invalid ToolType set in CCuttingTooth");
 	}
 }
 
