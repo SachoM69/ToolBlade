@@ -461,6 +461,7 @@ CIndexableInsESEA::~CIndexableInsESEA(void)
 
 TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 {
+	npmain.clear();
 	switch(IInst.IGroup)
 	{
 	case 0:

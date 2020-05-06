@@ -320,7 +320,7 @@ HRESULT CToolBladeTGDoc::UpdateIndInsInformation(int index, const IndInsParamete
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	CutterParams[index].libdata = *res;
 	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
-	CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, res);
+	CutterParams[index].libcpptr = CreateInsert(res);
 	return S_OK;
 }
 

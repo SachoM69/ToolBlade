@@ -747,6 +747,7 @@ void CTB_DesDlg::OnList_Dblclk(NMHDR *pNMHDR, LRESULT *pResult)
 		CurrentIndex = index;
 		UpdateInsertList();
 	}
+	InsertProvider->RefreshCutter(CurrentIndex, &a);
 
 	*pResult = 0;
 }

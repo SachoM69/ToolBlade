@@ -20,6 +20,7 @@ CTB_OriDlg::CTB_OriDlg(IInstrInsList* myprov, CWnd* pParent /*=nullptr*/)
 {
 	InsertProvider = myprov;
 	CurrentIndex = 0;
+	CurrentlyUpdating = false;
 }
 
 CTB_OriDlg::~CTB_OriDlg()
@@ -34,6 +35,7 @@ BOOL CTB_OriDlg::OnInitDialog()
 	InsertProvider->QueryIndInsOrientation(CurrentIndex, &ori);
 	LoadFromParams(&ori);
 	DrawEdgePoint();
+	InsertProvider->RefreshCutter(CurrentIndex, &ori);
 
 	ImageList = new CImageList();
 	ImageList->Create(16, 16, TRUE, 1, 1);
@@ -61,6 +63,13 @@ void CTB_OriDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CTB_OriDlg, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_IILIST, &CTB_OriDlg::OnNMDblclkIilist)
+	ON_EN_CHANGE(IDC_GAMMA, &CTB_OriDlg::OnEnChangeGamma)
+	ON_EN_CHANGE(IDC_LAMBDA, &CTB_OriDlg::OnEnChangeLambda)
+	ON_EN_CHANGE(IDC_PHI, &CTB_OriDlg::OnEnChangePhi)
+	ON_EN_CHANGE(IDC_DIAMETER, &CTB_OriDlg::OnEnChangeDiameter)
+	ON_WM_HSCROLL()
+	ON_CBN_SELCHANGE(IDC_ACTIVEEDGE, &CTB_OriDlg::OnCbnSelchangeActiveedge)
+	ON_BN_CLICKED(IDOK, &CTB_OriDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -78,6 +87,7 @@ void CTB_OriDlg::StoreToParams(IndInsOrientation* IIt)
 	IIt->Phi = RAD(_wtof(s_phi));
 	IIt->Lambda = RAD(_wtof(s_lambda));
 	IIt->PointIndex = PointCB.GetCurSel();
+	if (IIt->PointIndex == -1) IIt->PointIndex = 0;
 	int curpos = PointSl.GetPos();
 	int minpos = PointSl.GetRangeMin();
 	int maxpos = PointSl.GetRangeMax();
@@ -86,6 +96,7 @@ void CTB_OriDlg::StoreToParams(IndInsOrientation* IIt)
 
 void CTB_OriDlg::LoadFromParams(const IndInsOrientation* IIt)
 {
+	CurrentlyUpdating = true;
 	CString s_diam, s_gamma, s_lambda, s_phi;
 	s_diam.Format(_T("%f"), (IIt->Diameter*1000));
 	s_gamma.Format(_T("%f"), DEG(IIt->Gamma));
@@ -101,6 +112,7 @@ void CTB_OriDlg::LoadFromParams(const IndInsOrientation* IIt)
 	PointCB.SetCurSel(IIt->PointIndex);
 	PointSl.SetRange(0, 100);
 	PointSl.SetPos(int(IIt->EdgePosition * 100));
+	CurrentlyUpdating = false;
 }
 
 void CTB_OriDlg::DrawEdgePoint()
@@ -184,4 +196,53 @@ void CTB_OriDlg::OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	*pResult = 0;
+}
+
+
+void CTB_OriDlg::OnEnChangeGamma()
+{
+	if (CurrentlyUpdating) return;
+	IndInsOrientation a;
+	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->RefreshCutter(CurrentIndex, &a);
+}
+
+
+void CTB_OriDlg::OnEnChangeLambda()
+{
+	OnEnChangeGamma();
+}
+
+
+void CTB_OriDlg::OnEnChangePhi()
+{
+	OnEnChangeGamma();
+}
+
+
+void CTB_OriDlg::OnEnChangeDiameter()
+{
+	OnEnChangeGamma();
+}
+
+void CTB_OriDlg::OnHScroll(UINT, UINT, CScrollBar*)
+{
+	DrawEdgePoint();
+}
+
+void CTB_OriDlg::OnCbnSelchangeActiveedge()
+{
+	OnEnChangeGamma();
+	DrawEdgePoint();
+}
+
+
+void CTB_OriDlg::OnBnClickedOk()
+{
+	IndInsOrientation a;
+	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
+	CDialogEx::OnOK();
 }

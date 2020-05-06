@@ -33,6 +33,8 @@ protected:
 private:
 	IInstrInsList* InsertProvider;
 	int CurrentIndex;
+
+	bool CurrentlyUpdating;
 public:
 	CEdit GammaTB;
 	CEdit LambdaTB;
@@ -43,4 +45,11 @@ public:
 	afx_msg void OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult);
 	CListCtrl IndInsListView;
 	CImageList* ImageList;
+	afx_msg void OnEnChangeGamma();
+	afx_msg void OnEnChangeLambda();
+	afx_msg void OnEnChangePhi();
+	afx_msg void OnEnChangeDiameter();
+	afx_msg void OnHScroll(UINT, UINT, CScrollBar*);
+	afx_msg void OnCbnSelchangeActiveedge();
+	afx_msg void OnBnClickedOk();
 };
