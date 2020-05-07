@@ -489,10 +489,10 @@ TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 		IInst.r=1.;
 		switch (IInst.FormChar)
 		{
-			case 'A': IInst.eps=85.*deg; break;
-			case 'B': IInst.eps=82.*deg; break;
-			case 'K': IInst.eps=55.*deg; break;
-			case 'F': IInst.eps=84.*deg; break;
+			case 'A': IInst.eps=DEG(85.); break;
+			case 'B': IInst.eps=DEG(82.); break;
+			case 'K': IInst.eps=DEG(55.); break;
+			case 'F': IInst.eps=DEG(84.); break;
 		}
 		nn();
 		break;

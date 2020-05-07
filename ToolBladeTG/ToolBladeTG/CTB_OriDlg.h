@@ -52,4 +52,5 @@ public:
 	afx_msg void OnHScroll(UINT, UINT, CScrollBar*);
 	afx_msg void OnCbnSelchangeActiveedge();
 	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedDisplayreliefangles();
 };

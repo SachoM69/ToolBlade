@@ -2,25 +2,13 @@
 #include "CuttingTooth.h"
 #include <math.h>
 
-////////////////////// CCutTip ////////////////////////
-
-CCutTip::CCutTip(gp_Ax3 Ax3)
-{
-	CutTip = Ax3;
-};
-
-CCutTip::~CCutTip()
-{
-}
-
 ////////////////////// CCuttingTooth ////////////////////////
 
 CCuttingTooth::CCuttingTooth(double vgamma, double vphi, double vlambda, double diameter,ToolType TT , DirToolType DTT)
 :gamma(vgamma), 
 phi(vphi), 
 lambda(vlambda),
-tool_diam(diameter),
-CCutTip(gp_Ax3())
+tool_diam(diameter)
 {
 	SetMainEdgeDir(TT,DTT);
 }
@@ -136,7 +124,6 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 	kl.Normalize();
 	jl = kl.Crossed(il);
 
-	gp_Mat Mp0, Ml0;
 	Mp0.SetRows(ip, jp, kp);
 	Ml0.SetRows(il, jl, kl);
 	auto mp0I = Mp0.Inverted();
@@ -161,6 +148,44 @@ void CCuttingTooth::PlaneFromMatrixAndCoordinates()
 	gp_Pln res;
 	res.Transform(Fpl);
 	PrincipalPlane = res;
+}
+
+double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const
+{
+	gp_Mat ProjectionMatrix = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0);
+	gp_Pnt ptt = fK(n, t);
+	gp_XYZ tK = Ml0 * Mp0.Inverted() * ptt.XYZ();
+	gp_XYZ tKxy = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0) * tK;
+	double lambdaK = acos(tK.Crossed(tKxy).Normalized().Modulus()) * (tK.Z() < 0 ? -1 : 1);
+	gp_XYZ icK = tKxy.Normalized();
+	gp_XYZ kcK = gp_XYZ(0, 0, 1);
+	gp_XYZ jcK = kcK.Crossed(icK);
+	gp_Mat MAgamma;
+	MAgamma.SetRows(icK, jcK, kcK);
+	gp_XYZ NAgammaCK = ProjectionMatrix * MAgamma * A_gamma.XYZ();
+	NAgammaCK.Normalize();
+	gp_XYZ ycK = gp_XYZ(-icK.Y(), icK.X(), 0);
+
+	gp_Mat2d signmat = gp_Mat2d(gp_XY(NAgammaCK.Y(), NAgammaCK.Z()), gp_XY(kcK.Y(), kcK.Z()));
+	//if(ZeroRackAngle)
+		double gammai = acos(NAgammaCK * kcK) * (signmat.Determinant() < 0 ? -1 : 0);
+	//else
+	{
+		gp_XYZ NAgammaP = gp_XYZ(0, 0, 1) - gp_XYZ(ptt.Y(), -ptt.X(), 0) * tan(gammaP);
+		NAgammaP.Normalize();
+		gp_XYZ NAgammaPCK = ProjectionMatrix * MAgamma * Ml0 * Mp0.Inverted() * NAgammaP;
+		gp_Mat2d signpmat = gp_Mat2d(gp_XY(NAgammaPCK.Y(), NAgammaPCK.Z()), gp_XY(kcK.Y(), kcK.Z()));
+		double gammaPi = acos(NAgammaPCK.Crossed(kcK).Normalized().Modulus()) * (signpmat.Determinant() < 0 ? -1 : 0);
+	}
+	gp_XYZ NAalpha = gp_XYZ(ptt.Y(), -ptt.X(), 0) + gp_XYZ(0, 0, -tan(alphaP));
+	NAalpha.Normalize();
+	gp_XYZ NAalphaCK = ProjectionMatrix * MAgamma * Ml0 * Mp0.Inverted() * NAalpha;
+
+	gp_XYZ j = gp_XYZ(0, -1, 0);
+	gp_Mat2d signalphamat = gp_Mat2d(gp_XY(j.Y(), j.X()), gp_XY(NAalphaCK.Y(), NAalphaCK.Z()));
+	double alphac = acos((NAalphaCK * j).Normalized().Modulus()) * (signalphamat.Determinant() < 0 ? -1 : 0);
+
+	return alphac;
 }
 
 void CCuttingTooth::CalcCutterAngles()
@@ -199,7 +224,7 @@ void CIndInsTooth::SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3)
 	SetIIMainEdgeAx0();
 }
 
-gp_Vec CIndInsTooth::ft(int PointIndex, double ti)
+gp_Vec CIndInsTooth::ft(int PointIndex, double ti) const
 {
 	gp_Pnt pt_on_cv;
 	gp_Vec tan_to_cv;
@@ -208,7 +233,7 @@ gp_Vec CIndInsTooth::ft(int PointIndex, double ti)
 	return tan_to_cv;
 }
 
-gp_Pnt CIndInsTooth::fK(int PointIndex, double ti)
+gp_Pnt CIndInsTooth::fK(int PointIndex, double ti) const
 {
 	gp_Pnt pt_on_cv;
 	IndIns->curves[PointIndex]->D0(ti, pt_on_cv);
@@ -223,7 +248,7 @@ double CIndInsTooth::ftY(int iY0, int i)
 	int t0 = iY0/dK;
 	int t1 = t0 + 1;
 	if (IndIns->d_order[t0] == 2) troot = double(iY0) / dK;
-	else troot = sqrt(0);
+	else troot = sqrt(0); //TODO: что там за функция?
 	return troot;
 }
 void CIndInsTooth::ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index)
@@ -286,6 +311,25 @@ TopoDS_Shape CIndInsTooth::RotatedIntoPlace()
 	TopoDS_Shape shp = IndIns->ConstructToolBlade();
 	shp.Move(TopLoc_Location(Fpl));
 	return shp;
+}
+
+void CIndInsTooth::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const
+{
+	gp_Pnt oP;
+	gp_Vec oV;
+	gp_Ax3 oA;
+	IndIns->IIVertex(n, t, oP, oV, oA);
+	oP.Transform(Fpl);
+	oV.Transform(Fpl);
+	oA.Transform(Fpl);
+	P = oP;
+	V = oV;
+	Ax3 = oA;
+}
+
+gp_Dir CIndInsTooth::NormalToReferencePlane() const
+{
+	return A_gamma; // TODO к передней или к плоскости резания?
 }
 
 #undef ROUND_TO_5

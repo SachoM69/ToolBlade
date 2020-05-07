@@ -7,6 +7,8 @@
 #include "afxdialogex.h"
 //#include "d:\SB\ToolBlade\ToolBlade\ToolBlade.h"
 
+#define deg M_PI/180
+
 //массив стандартных размеров пластин
 const double darr[] = {3.97,4.76,5.56,6.35,7.94,9.525,12.7,15.875,19.05,25.4,31.75};
 
@@ -256,7 +258,7 @@ void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 	II.eps=II_eps;
 	II.n=II_n;
 
-	II.RackAng=II_RackAng;
+	II.ReliefAng=II_RackAng;
 
 	II.HT=II_HT;
 	II.Dim=II_Dim;
@@ -279,7 +281,7 @@ void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 	int sel=0;
 	for (int i=0; i<(sizeof(RAarr)/sizeof(double)); i++)
 	{
-		if (RAarr[i]==IIt->RackAng) 
+		if (RAarr[i]==IIt->ReliefAng) 
 		{
 			sel=i; 
 			break;

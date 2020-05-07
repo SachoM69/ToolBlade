@@ -70,6 +70,7 @@ BEGIN_MESSAGE_MAP(CTB_OriDlg, CDialogEx)
 	ON_WM_HSCROLL()
 	ON_CBN_SELCHANGE(IDC_ACTIVEEDGE, &CTB_OriDlg::OnCbnSelchangeActiveedge)
 	ON_BN_CLICKED(IDOK, &CTB_OriDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_DISPLAYRELIEFANGLES, &CTB_OriDlg::OnBnClickedDisplayreliefangles)
 END_MESSAGE_MAP()
 
 
@@ -245,4 +246,12 @@ void CTB_OriDlg::OnBnClickedOk()
 	StoreToParams(&a);
 	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
 	CDialogEx::OnOK();
+}
+
+
+void CTB_OriDlg::OnBnClickedDisplayreliefangles()
+{
+	const IIndexableInsertSeated* iis;
+	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
+	InsertProvider->GraphReliefAngle(CurrentIndex, iis);
 }

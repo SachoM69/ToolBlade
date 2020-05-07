@@ -4,20 +4,9 @@
 #include "IndexableIns.h"
 #include "math.h"
 
-// класс с вершиной
-class CCutTip //вершина инструмента
-{
-public:
-	CCutTip(gp_Ax3 Ax3);
-	~CCutTip();
-protected:
-	gp_Ax3 CutTip; //вершина зуба
-
-};
-
 // класс, производящий расчеты
 // считаем в конструкторе.
-class CCuttingTooth abstract :public CCutTip //Зуб режущего инструмента
+class CCuttingTooth abstract :public IIndexableInsertSeated //Зуб режущего инструмента
 {
 public:
 	//углы зуба
@@ -51,11 +40,13 @@ public:
 	virtual void ProjectContourToPlane() = 0;
 
 	// вспомогательные функции из маткада
-	virtual gp_Vec ft(int PointIndex, double ti) = 0;
-	virtual gp_Pnt fK(int PointIndex, double ti) = 0;
+	virtual gp_Vec ft(int PointIndex, double ti) const = 0;
+	virtual gp_Pnt fK(int PointIndex, double ti) const = 0;
 	virtual double ftY(int iY0, int i) = 0;
 	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) = 0;
 
+	// расчет углов
+	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const override;
 protected:
 	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;
@@ -71,6 +62,7 @@ protected:
 	gp_Dir A_gamma;//нормаль к передней поверхности зуба
 	Standard_Real plx, ply; // координаты вершины
 	gp_Mat Fpl0; // матрица поворота в положение в инструменте
+	gp_Mat Mp0, Ml0;
 	gp_Trsf Fpl;
 	gp_Pln PrincipalPlane;
 	std::vector<gp_Pnt> ProjectedPts;
@@ -86,8 +78,8 @@ public:
 	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3);
 
 	// вспомогательные функции из маткада
-	virtual gp_Vec ft(int PointIndex, double ti) override;
-	virtual gp_Pnt fK(int PointIndex, double ti) override;
+	virtual gp_Vec ft(int PointIndex, double ti) const override;
+	virtual gp_Pnt fK(int PointIndex, double ti) const override;
 					 // Унаследовано через CCuttingTooth
 	virtual double ftY(int iY0, int i) override;
 	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) override;
@@ -95,9 +87,11 @@ public:
 	gp_Pnt K0(int index);
 	gp_Pnt K0r(int index);
 	virtual TopoDS_Shape RotatedIntoPlace() override;
+	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
+	virtual gp_Dir NormalToReferencePlane() const override;
 
-protected:
 	CIndexableInsert* IndIns;
+protected:
 
 	Standard_Integer II_n;//номер главной режущей кромки пластины
 	Standard_Real II_t;//параметр точки режущей кромки для которой задаются параметры режущей кромки

@@ -77,6 +77,8 @@
 #include <gp_Dir2d.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Lin2d.hxx>
+#include <gp_Mat.hxx>
+#include <gp_Mat2d.hxx>
 #include <gp_Pnt2d.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>

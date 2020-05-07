@@ -36,6 +36,7 @@ private:
 		IndInsOrientation liboridata;
 		IndInsAttributes diagdata;
 		IIndexableInsert* libcpptr;
+		IIndexableInsertSeated* liboriptr;
 	};
 	std::vector<IndInsData> CutterParams;
 	ToolData Instrument;
@@ -64,11 +65,13 @@ public:
 	virtual HRESULT UpdateIndInsOrientation(int index, const IndInsOrientation*) override;
 	virtual HRESULT QueryToolData(ToolData*) override;
 	virtual HRESULT QueryIndInsObject(int index, const IIndexableInsert**) override;
+	virtual HRESULT QueryIndInsObjectSeated(int index, const IIndexableInsertSeated**) override;
 	virtual HRESULT RequestNewInsert(int* index_inout);
 	virtual HRESULT RequestRemoveInsert(int index);
 	virtual HRESULT ShowPoint(gp_Pnt, bool) override;
 	virtual HRESULT RefreshCutter(int index, const IndInsParameters*) override;
 	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) override;
+	virtual HRESULT GraphReliefAngle(int index, const IIndexableInsertSeated*) override;
 
 // Реализация
 public:

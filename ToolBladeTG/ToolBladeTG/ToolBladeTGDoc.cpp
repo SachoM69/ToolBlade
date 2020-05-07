@@ -57,6 +57,7 @@ CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 	idt.liboridata = IndOri;
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
+	idt.liboriptr = nullptr;
 	CutterParams.push_back(idt);
 	Instrument.ActualToothCount=Instrument.UsedToothCount=1;
 	Instrument.CutDirection=false;
@@ -74,7 +75,7 @@ IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 	IndIns.IIForm=2;//номер формы пластины
 	IndIns.FormChar='P';
 	IndIns.n=3;
-	IndIns.RackAng=0;//валичина заднего угла
+	IndIns.ReliefAng=0;//валичина заднего угла
 	IndIns.HT=CylHole;//Ќаличие и форма отверсти€
 	IndIns.Dim=6.35;//–азмер
 	IndIns.Thick=3.5;//“олщина
@@ -241,7 +242,7 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
 	{
 		if (!CutterParams[index].libcpptr)
 			CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
-		CutterParams[index].libcpptr = OrientInsertAndPreview(myAISContext, CutterParams[index].libcpptr, a);
+		CutterParams[index].liboriptr = OrientInsertAndPreview(myAISContext, CutterParams[index].libcpptr, a);
 		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
 		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
 		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
@@ -372,6 +373,16 @@ HRESULT CToolBladeTGDoc::QueryIndInsObject(int index, const IIndexableInsert** o
 	return S_OK;
 }
 
+HRESULT CToolBladeTGDoc::QueryIndInsObjectSeated(int index, const IIndexableInsertSeated** optr)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	if(!CutterParams[index].libcpptr) CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
+	if(CutterParams[index].liboriptr) DestroyInsert(CutterParams[index].libcpptr);
+	*optr = CutterParams[index].liboriptr = OrientInsert(CutterParams[index].libcpptr , &CutterParams[index].liboridata);
+	return S_OK;
+}
+
 void CToolBladeTGDoc::OnTooltype()
 {
 	ToolTypeDlg* TTD = new ToolTypeDlg;
@@ -399,6 +410,7 @@ HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
 	}
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
+	idt.liboriptr = nullptr;
 	CutterParams.push_back(idt);
 	Instrument.ActualToothCount++; Instrument.UsedToothCount++;
 	*index = int(CutterParams.size()-1);
@@ -468,4 +480,43 @@ void CToolBladeTGDoc::OnShowtool()
 	{
 		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
 	}
+}
+
+HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeated* iis)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	int pt_cnt = CutterParams[index].libcpptr->NumPoint();
+	gp_XYZ norm = iis->NormalToReferencePlane().XYZ();
+
+	TopoDS_Shape ToolBlade;
+	TopoDS_Wire aW;
+
+	for (Standard_Integer i = 0; i < pt_cnt; i++)
+	{
+		//массив контрольных точек кривой
+		TColgp_Array1OfPnt CPs(1, 10);
+		//массив весов точек
+		TColStd_Array1OfReal wi(1, 10);
+		for (Standard_Integer j = 0; j < 10; j++)
+		{
+			Standard_Real f = Standard_Real(j) / 10.;
+			gp_Pnt point;
+			gp_Vec tangent;
+			gp_Ax3 u;
+			iis->IIVertex(i, f, point, tangent, u);
+			double magn = iis->EffectiveReliefAngle(i, f);
+			gp_Pnt waypoint = point.Translated(((tangent.Crossed(norm)).Normalized() * magn));
+
+			//создание массивов точек и весов дл€ сегментов кривых
+			CPs(j) = waypoint;
+			wi(j) = 1;
+		}
+			//создание кривых
+		Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CPs, wi);
+		TopoDS_Edge aEdge = BRepBuilderAPI_MakeEdge(curve);
+		aW = BRepBuilderAPI_MakeWire(aW, aEdge);
+	}
+	TopoDS_Face aF = BRepBuilderAPI_MakeFace(aW);
+	return S_OK;
 }

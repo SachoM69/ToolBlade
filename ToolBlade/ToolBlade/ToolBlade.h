@@ -1,24 +1,14 @@
 struct IndInsParameters;
 class IIndexableInsert;
 struct IndInsOrientation;
+class IIndexableInsertSeated;
 
 __declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters*);
 __declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_InteractiveContext, const IndInsParameters*);
-__declspec(dllexport) IIndexableInsert* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* ,const IndInsOrientation* IIt);
+__declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert*, const IndInsOrientation* IIt);
+__declspec(dllexport) IIndexableInsertSeated* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* ,const IndInsOrientation* IIt);
 __declspec(dllexport) void DestroyInsert(const IIndexableInsert*);
-//extern Handle_AIS_Shape CuttingPlate;
-
-//enum GroupCapt { GCP_ESEA = '0', GCP_ESNA = '1', GCP_NSEA = '2', GCP_NSNA = '3' };
-//enum GroupCapt { GCP_ESEA = 0, GCP_ESNA = 1, GCP_NSEA = 2, GCP_NSNA = 3 };
-
-/*class CPart//присоединяемая деталь
-{
-public:
-	CPart(gp_Ax3 vBase) {Base=vBase;};
-	gp_Ax3 GetBase(){return Base;};
-protected:
-	gp_Ax3 Base;//СК посадочной поверхности в а
-};*/
+__declspec(dllexport) void DestroyInsert(const IndInsOrientation*);
 
 enum VertForm { VF_SHARP=0, VF_FILLET=1, VF_CHAMFER=2};
 //тип отверстия в пластине
@@ -56,7 +46,7 @@ struct IndInsParameters
 	wchar_t FormChar;
 	int n;//число вершин
 	double eps;//угол при вершине
-	double RackAng;//величина заднего угла
+	double ReliefAng;//величина заднего угла
 	int HT;//Наличие и форма отверстия
 	int VertForm;//форма вершины
 	double r;//радиус округления вершины
@@ -81,8 +71,6 @@ struct IndInsOrientation
 	double EdgePosition;
 };
 
-const double deg=M_PI/180;
-
 class IIndexableInsert
 {
 public:
@@ -95,4 +83,12 @@ public:
 	// Ax3 - система координат в точке
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const = 0;
 	virtual TopoDS_Shape ConstructToolBlade() = 0;
+};
+
+class IIndexableInsertSeated
+{
+public:
+	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const = 0;
+	virtual gp_Dir NormalToReferencePlane() const = 0;
+	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const = 0;
 };
