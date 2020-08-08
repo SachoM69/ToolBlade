@@ -43,6 +43,7 @@ private:
 	Handle_ISession_Direction MyCoolArrow[3];
 	Handle_ISession_Direction PntDirArrow;
 	Handle_AIS_Point VisPnt;
+	Handle_AIS_Shape StaticReliefAngles;
 
 	static IndInsParameters GetDefaultInsert();
 	static IndInsOrientation GetDefaultOrientation();

@@ -11,6 +11,7 @@ lambda(vlambda),
 tool_diam(diameter)
 {
 	SetMainEdgeDir(TT,DTT);
+	SetA_gamma(vgamma, vphi, vlambda);
 }
 
 void CCuttingTooth::SetTipParameters(int PointIndex, double EdgePosition)
@@ -124,8 +125,8 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 	kl.Normalize();
 	jl = kl.Crossed(il);
 
-	Mp0.SetRows(ip, jp, kp);
-	Ml0.SetRows(il, jl, kl);
+	Mp0.SetCols(ip, jp, kp);
+	Ml0.SetCols(il, jl, kl);
 	auto mp0I = Mp0.Inverted();
 	Fpl0 = Ml0 * mp0I;
 
@@ -152,11 +153,13 @@ void CCuttingTooth::PlaneFromMatrixAndCoordinates()
 
 double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const
 {
-	gp_Mat ProjectionMatrix = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0);
-	gp_Pnt ptt = fK(n, t);
+	double alphaP = alpha;
+
+	gp_Mat ProjectionMatrix = gp_Mat(0, 0, 0, 0, 1, 0, 0, 0, 1);
+	gp_Vec ptt = ft(n, t);
 	gp_XYZ tK = Ml0 * Mp0.Inverted() * ptt.XYZ();
-	gp_XYZ tKxy = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0) * tK;
-	double lambdaK = acos(tK.Crossed(tKxy).Normalized().Modulus()) * (tK.Z() < 0 ? -1 : 1);
+	gp_XYZ tKxy = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0) *tK;
+	double lambdaK = acos((tK * tKxy)/(tK.Modulus() * tKxy.Modulus())) * (tK.Z() < 0 ? -1 : 1);
 	gp_XYZ icK = tKxy.Normalized();
 	gp_XYZ kcK = gp_XYZ(0, 0, 1);
 	gp_XYZ jcK = kcK.Crossed(icK);
@@ -168,14 +171,14 @@ double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) 
 
 	gp_Mat2d signmat = gp_Mat2d(gp_XY(NAgammaCK.Y(), NAgammaCK.Z()), gp_XY(kcK.Y(), kcK.Z()));
 	//if(ZeroRackAngle)
-		double gammai = acos(NAgammaCK * kcK) * (signmat.Determinant() < 0 ? -1 : 0);
+		double gammai = acos(NAgammaCK * kcK) * (signmat.Determinant() < 0 ? -1 : 1);
 	//else
 	{
-		gp_XYZ NAgammaP = gp_XYZ(0, 0, 1) - gp_XYZ(ptt.Y(), -ptt.X(), 0) * tan(gammaP);
+		gp_XYZ NAgammaP = gp_XYZ(0, 0, 1) - gp_XYZ(ptt.Y(), -ptt.X(), 0) * tan(gammaP());
 		NAgammaP.Normalize();
 		gp_XYZ NAgammaPCK = ProjectionMatrix * MAgamma * Ml0 * Mp0.Inverted() * NAgammaP;
 		gp_Mat2d signpmat = gp_Mat2d(gp_XY(NAgammaPCK.Y(), NAgammaPCK.Z()), gp_XY(kcK.Y(), kcK.Z()));
-		double gammaPi = acos(NAgammaPCK.Crossed(kcK).Normalized().Modulus()) * (signpmat.Determinant() < 0 ? -1 : 0);
+		double gammaPi = acos((NAgammaPCK*kcK)/ (kcK.Modulus()* NAgammaPCK.Modulus())) * (signpmat.Determinant() < 0 ? -1 : 1);
 	}
 	gp_XYZ NAalpha = gp_XYZ(ptt.Y(), -ptt.X(), 0) + gp_XYZ(0, 0, -tan(alphaP));
 	NAalpha.Normalize();
@@ -183,9 +186,24 @@ double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) 
 
 	gp_XYZ j = gp_XYZ(0, -1, 0);
 	gp_Mat2d signalphamat = gp_Mat2d(gp_XY(j.Y(), j.X()), gp_XY(NAalphaCK.Y(), NAalphaCK.Z()));
-	double alphac = acos((NAalphaCK * j).Normalized().Modulus()) * (signalphamat.Determinant() < 0 ? -1 : 0);
+	double alphac = acos((NAalphaCK * j) / (NAalphaCK.Modulus() * j.Modulus())) * (signalphamat.Determinant() < 0 ? -1 : 1);
 
 	return alphac;
+}
+
+double CCuttingTooth::EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const
+{
+	gp_Pnt ptt(0, 0, 0); //TODO
+	gp_XYZ kd = velocity.XYZ();
+	gp_XYZ tK = Ml0 * Mp0.Inverted() *ptt.XYZ();
+	gp_XYZ Pnk = tK ^ kd;
+	gp_XYZ ikK = kd ^ Pnk;
+	ikK.Normalize();
+	gp_XYZ kkK = kd;
+	gp_XYZ jkK = kkK ^ ikK;
+	gp_Mat MAgammak;
+	MAgammak.SetRows(ikK, jkK, kkK);
+	return 0.0;
 }
 
 void CCuttingTooth::CalcCutterAngles()
@@ -242,13 +260,41 @@ gp_Pnt CIndInsTooth::fK(int PointIndex, double ti) const
 
 #define dK 9
 
+class ftrot : public math_Function
+{
+public:
+	ftrot(const CIndInsTooth* mt, int crd, int idd) : mytooth(mt), coord(crd), id(idd)
+	{
+	};
+	Standard_EXPORT virtual Standard_Boolean Value(const Standard_Real X, Standard_Real& F) override
+	{
+		F = (mytooth->Fpl0 * mytooth->ft(id, X).XYZ()).Coord(coord + 1);
+		return Standard_True;
+	}
+private:
+	const CIndInsTooth* mytooth;
+	int id;
+	int coord;
+};
+
 double CIndInsTooth::ftY(int iY0, int i)
 {
 	double troot = 0;
+	double t = double(iY0) / dK;
 	int t0 = iY0/dK;
 	int t1 = t0 + 1;
-	if (IndIns->d_order[t0] == 2) troot = double(iY0) / dK;
-	else troot = sqrt(0); //TODO: что там за функция?
+	if (IndIns->d_order[t0] == 1) troot = t;
+	else
+	{
+		ftrot ftrot(this, i, t0);
+		double lower, upper;
+		ftrot.Value(0, lower);
+		ftrot.Value(1, upper);
+		if (lower * upper > 0)
+		{
+			troot = min(lower, upper);
+		} else troot = math_BracketedRoot(ftrot, 0, 1, 0.0001).Root(); //TODO: что там за функция?
+	}
 	return troot;
 }
 void CIndInsTooth::ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index)
@@ -330,6 +376,11 @@ void CIndInsTooth::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_V
 gp_Dir CIndInsTooth::NormalToReferencePlane() const
 {
 	return A_gamma; // TODO к передней или к плоскости резания?
+}
+
+double CIndInsTooth::gammaP() const
+{
+	return IndIns->IInst.RackAng;
 }
 
 #undef ROUND_TO_5

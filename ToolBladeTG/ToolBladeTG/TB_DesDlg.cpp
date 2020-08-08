@@ -8,6 +8,8 @@
 //#include "d:\SB\ToolBlade\ToolBlade\ToolBlade.h"
 
 #define deg M_PI/180
+#define RAD(x) ((x)*M_PI/180)
+#define DEG(x) ((x)*180/M_PI)
 
 //массив стандартных размеров пластин
 const double darr[] = {3.97,4.76,5.56,6.35,7.94,9.525,12.7,15.875,19.05,25.4,31.75};
@@ -43,7 +45,8 @@ void CTB_DesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_IGROUP, IGroupList);
 	DDX_Control(pDX, IDC_IIFORM, IIFormList);
 	DDX_Control(pDX, IDC_IIDIM, IIDimList);
-	DDX_Control(pDX, IDC_INDINSRACKANG, IIRackAnglList);
+	DDX_Control(pDX, IDC_INDINSRELIEFANG, IIReliefAnglList);
+	DDX_Control(pDX, IDC_INDINSRACKANGLE, RackAngleTB);
 	DDX_Control(pDX, IDC_INDINSKONSFEATURE, IIKonsFeatureList);
 	DDX_Control(pDX, IDC_INDINSTOLCLASS, IITolClassList);
 	DDX_Control(pDX, IDC_INDINSTHICKNESS, IIThicknessList);
@@ -147,7 +150,10 @@ void CTB_DesDlg::CollectDlgData()
 	wchar_t S1=S[0];
 	II_n=0;
 	II_eps=0;
-	II_RackAng=0.;
+	II_ReliefAng=0.;
+	CString s_rack;
+	RackAngleTB.GetWindowText(s_rack);
+	II_RackAng = RAD(_wtof(s_rack));
 	switch (IGroup)
 	{
 		case 0: switch (S1)
@@ -188,8 +194,8 @@ void CTB_DesDlg::CollectDlgData()
 				}
 	}
 
-	sel = IIRackAnglList.GetCurSel();	
-	II_RackAng=RAarr[sel];//валичина заднего угла
+	sel = IIReliefAnglList.GetCurSel();	
+	II_ReliefAng=RAarr[sel];//валичина заднего угла
 
 	sel = IIKonsFeatureList.GetCurSel();
 	II_HT=sel;//Наличие и форма отверстия
@@ -228,8 +234,11 @@ void CTB_DesDlg::UnpackDlgData()
 	IGroupList.SetCurSel(IGroup);
 	OnCbnSelchangeIgroup();
 	IIFormList.SetCurSel(IIForm);
-	SetRackAnglList();
-	IIRackAnglList.SetCurSel(nRackAngle);
+	SetReliefAnglList();
+	IIReliefAnglList.SetCurSel(nReliefAngle);
+	CString RackText;
+	RackText.Format(_T("%f"), DEG(II_RackAng));
+	RackAngleTB.SetWindowText(RackText);
 	SetTolClassList();
 	SetKonsFeatureList();
 	IIKonsFeatureList.SetCurSel(II_HT);
@@ -258,7 +267,8 @@ void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 	II.eps=II_eps;
 	II.n=II_n;
 
-	II.ReliefAng=II_RackAng;
+	II.ReliefAng=II_ReliefAng;
+	II.RackAng = II_RackAng;
 
 	II.HT=II_HT;
 	II.Dim=II_Dim;
@@ -287,7 +297,8 @@ void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 			break;
 		}
 	}
-	nRackAngle=sel;
+	nReliefAngle=sel;
+	II_RackAng = IIt->RackAng;
 		//Толщина
 	sel=0;
 	for (int i=0; i<(sizeof(THarr)/sizeof(double)); i++)
@@ -541,19 +552,19 @@ void CTB_DesDlg::OnCbnSelchangeIidim()
 }
 
 
-void CTB_DesDlg::SetRackAnglList()
+void CTB_DesDlg::SetReliefAnglList()
 {
-	IIRackAnglList.ResetContent();
-	IIRackAnglList.AddString(L"A 7 3°");
-	IIRackAnglList.AddString(L"B 8 5°");
-	IIRackAnglList.AddString(L"C 2 7°");
-	IIRackAnglList.AddString(L"D 6 15°");
-	IIRackAnglList.AddString(L"E 4 20°");
-	IIRackAnglList.AddString(L"F 5 25°");
-	IIRackAnglList.AddString(L"G 9 30°");
-	IIRackAnglList.AddString(L"N 1 0°");
-	IIRackAnglList.AddString(L"P 3 11°");
-	IIRackAnglList.AddString(L"O 0 Спец.");
+	IIReliefAnglList.ResetContent();
+	IIReliefAnglList.AddString(L"A 7 3°");
+	IIReliefAnglList.AddString(L"B 8 5°");
+	IIReliefAnglList.AddString(L"C 2 7°");
+	IIReliefAnglList.AddString(L"D 6 15°");
+	IIReliefAnglList.AddString(L"E 4 20°");
+	IIReliefAnglList.AddString(L"F 5 25°");
+	IIReliefAnglList.AddString(L"G 9 30°");
+	IIReliefAnglList.AddString(L"N 1 0°");
+	IIReliefAnglList.AddString(L"P 3 11°");
+	IIReliefAnglList.AddString(L"O 0 Спец.");
 }
 
 void CTB_DesDlg::SetTolClassList()

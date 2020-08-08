@@ -378,7 +378,7 @@ HRESULT CToolBladeTGDoc::QueryIndInsObjectSeated(int index, const IIndexableInse
 	size_t indop(index);
 	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 	if(!CutterParams[index].libcpptr) CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
-	if(CutterParams[index].liboriptr) DestroyInsert(CutterParams[index].libcpptr);
+	if(CutterParams[index].liboriptr) DestroyInsert(CutterParams[index].liboriptr);
 	*optr = CutterParams[index].liboriptr = OrientInsert(CutterParams[index].libcpptr , &CutterParams[index].liboridata);
 	return S_OK;
 }
@@ -495,28 +495,68 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 	for (Standard_Integer i = 0; i < pt_cnt; i++)
 	{
 		//массив контрольных точек кривой
-		TColgp_Array1OfPnt CPs(1, 10);
+		TColgp_Array1OfPnt CPs(1, 12);
 		//массив весов точек
-		TColStd_Array1OfReal wi(1, 10);
-		for (Standard_Integer j = 0; j < 10; j++)
+		TColStd_Array1OfReal wi(1, 12);
+		for (Standard_Integer j = 2; j <= 11; j++)
 		{
-			Standard_Real f = Standard_Real(j) / 10.;
+			Standard_Real f = Standard_Real(j-2) / 9.;
 			gp_Pnt point;
 			gp_Vec tangent;
 			gp_Ax3 u;
 			iis->IIVertex(i, f, point, tangent, u);
 			double magn = iis->EffectiveReliefAngle(i, f);
-			gp_Pnt waypoint = point.Translated(((tangent.Crossed(norm)).Normalized() * magn));
+			gp_XYZ nrm = tangent.XYZ(); nrm ^= norm;
+			gp_Pnt waypoint = point.Translated(nrm.Normalized() * magn);
+			//waypoint.SetZ(waypoint.Z() - 1);
 
 			//создание массивов точек и весов для сегментов кривых
 			CPs(j) = waypoint;
 			wi(j) = 1;
 		}
+		gp_Vec tangent;
+		gp_Ax3 u;
+		iis->IIVertex(i, 0., CPs(1), tangent, u);
+		iis->IIVertex(i, 1., CPs(12), tangent, u);
+		//CPs(1).SetZ(CPs(1).Z() - 1);
+		//CPs(12).SetZ(CPs(12).Z() - 1);
+		wi(1) = 1;
+		wi(12) = 1;
+		for (Standard_Integer j = 1; j <= 11; j++)
+		{
+			TColgp_Array1OfPnt CPLine(1, 2);
+			TColStd_Array1OfReal wiLine(1, 2);
+			CPLine[1] = CPs[j];
+			CPLine[2] = CPs[j+1];
+			wiLine[1] = wi[j];
+			wiLine[2] = wi[j+1];
 			//создание кривых
-		Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CPs, wi);
-		TopoDS_Edge aEdge = BRepBuilderAPI_MakeEdge(curve);
-		aW = BRepBuilderAPI_MakeWire(aW, aEdge);
+			Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CPLine, wiLine);
+			TopoDS_Edge aEdge = BRepBuilderAPI_MakeEdge(curve);
+			aW = BRepBuilderAPI_MakeWire(aW, aEdge);
+		}
+		for (Standard_Integer j = 2; j <= 11; j++)
+		{
+			TColgp_Array1OfPnt CPLine(1, 2);
+			TColStd_Array1OfReal wiLine(1, 2);
+			CPLine[1] = CPs[j];
+			Standard_Real f = Standard_Real(j - 2) / 9.;
+			gp_Pnt point;
+			gp_Vec tangent;
+			gp_Ax3 u;
+			iis->IIVertex(i, f, point, tangent, u);
+			CPLine[2] = point;
+			wiLine[1] = wi[j];
+			wiLine[2] = 1;
+			//создание кривых
+			Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CPLine, wiLine);
+			TopoDS_Edge aEdge = BRepBuilderAPI_MakeEdge(curve);
+			aW = BRepBuilderAPI_MakeWire(aW, aEdge);
+		}
 	}
 	TopoDS_Face aF = BRepBuilderAPI_MakeFace(aW);
+	StaticReliefAngles = new AIS_Shape(aW);
+	StaticReliefAngles->SetColor(Quantity_NOC_BLUE1);
+	myAISContext->Display(StaticReliefAngles, Standard_True);
 	return S_OK;
 }

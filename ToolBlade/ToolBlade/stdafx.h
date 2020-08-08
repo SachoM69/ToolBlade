@@ -11,6 +11,8 @@
 // Windows Header Files:
 #include <windows.h>
 
+#include <algorithm>
+
 
 #pragma warning(  disable : 4244 )        // Issue warning 4244
 #include <Standard_ShortReal.hxx>
@@ -85,6 +87,8 @@
 #include <gp_Vec2d.hxx>
 #include <gp_Quaternion.hxx>
 #include <MMgt_TShared.hxx>
+#include <Math_Function.hxx>
+#include <Math_BracketedRoot.hxx>
 #include <OSD_Environment.hxx>
 #include <Precision.hxx>
 #include <Prs3d_IsoAspect.hxx>

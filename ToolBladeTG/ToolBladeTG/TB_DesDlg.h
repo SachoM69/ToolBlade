@@ -56,9 +56,13 @@ private:
 	int IIn_d;//номер в списке размеров
 	double II_Dim;//размер 
 	// —писок обозначений задних углов
-	CComboBox IIRackAnglList;
-	int nRackAngle;
+	CComboBox IIReliefAnglList;
+	int nReliefAngle;
+	double II_ReliefAng;
+	// ¬еличина переднего угла
+	CEdit RackAngleTB;
 	double II_RackAng;
+
 	wchar_t FormChar;
 	// —писок обозначений класса допуска
 	CComboBox IITolClassList;
@@ -98,7 +102,7 @@ private:
 
 	//подготовка данных и заполнение списка IIDimList
 	void SetDimList();
-	void SetRackAnglList();
+	void SetReliefAnglList();
 	void SetTolClassList();
 	void SetKonsFeatureList();
 	void SetThicknessList();

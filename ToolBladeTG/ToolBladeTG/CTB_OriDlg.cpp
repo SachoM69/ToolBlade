@@ -251,6 +251,10 @@ void CTB_OriDlg::OnBnClickedOk()
 
 void CTB_OriDlg::OnBnClickedDisplayreliefangles()
 {
+	IndInsOrientation a;
+	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
 	const IIndexableInsertSeated* iis;
 	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
 	InsertProvider->GraphReliefAngle(CurrentIndex, iis);

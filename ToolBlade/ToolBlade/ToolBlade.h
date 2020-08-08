@@ -8,7 +8,7 @@ __declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_Intera
 __declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert*, const IndInsOrientation* IIt);
 __declspec(dllexport) IIndexableInsertSeated* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* ,const IndInsOrientation* IIt);
 __declspec(dllexport) void DestroyInsert(const IIndexableInsert*);
-__declspec(dllexport) void DestroyInsert(const IndInsOrientation*);
+__declspec(dllexport) void DestroyInsert(const IIndexableInsertSeated*);
 
 enum VertForm { VF_SHARP=0, VF_FILLET=1, VF_CHAMFER=2};
 //тип отверстия в пластине
@@ -47,6 +47,7 @@ struct IndInsParameters
 	int n;//число вершин
 	double eps;//угол при вершине
 	double ReliefAng;//величина заднего угла
+	double RackAng; //величина переднего угла
 	int HT;//Наличие и форма отверстия
 	int VertForm;//форма вершины
 	double r;//радиус округления вершины
@@ -91,4 +92,5 @@ public:
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const = 0;
 	virtual gp_Dir NormalToReferencePlane() const = 0;
 	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const = 0;
+	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const = 0;
 };

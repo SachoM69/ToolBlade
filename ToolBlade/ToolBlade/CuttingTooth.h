@@ -44,9 +44,11 @@ public:
 	virtual gp_Pnt fK(int PointIndex, double ti) const = 0;
 	virtual double ftY(int iY0, int i) = 0;
 	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) = 0;
+	virtual double gammaP() const = 0;
 
 	// расчет углов
 	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const override;
+	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const override;
 protected:
 	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;
@@ -66,6 +68,8 @@ protected:
 	gp_Trsf Fpl;
 	gp_Pln PrincipalPlane;
 	std::vector<gp_Pnt> ProjectedPts;
+
+	friend class ftrot;
 };
 
 //
@@ -89,6 +93,7 @@ public:
 	virtual TopoDS_Shape RotatedIntoPlace() override;
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
 	virtual gp_Dir NormalToReferencePlane() const override;
+	virtual double gammaP() const override;
 
 	CIndexableInsert* IndIns;
 protected:
