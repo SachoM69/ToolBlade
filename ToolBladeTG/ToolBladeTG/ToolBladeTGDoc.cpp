@@ -505,7 +505,7 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 			gp_Vec tangent;
 			gp_Ax3 u;
 			iis->IIVertex(i, f, point, tangent, u);
-			double magn = iis->EffectiveReliefAngle(i, f);
+			double magn = iis->EffectiveReliefAngle(i, f)*3;
 			gp_XYZ nrm = tangent.XYZ(); nrm ^= norm;
 			gp_Pnt waypoint = point.Translated(nrm.Normalized() * magn);
 			//waypoint.SetZ(waypoint.Z() - 1);

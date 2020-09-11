@@ -153,8 +153,6 @@ void CCuttingTooth::PlaneFromMatrixAndCoordinates()
 
 double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const
 {
-	double alphaP = alpha;
-
 	gp_Mat ProjectionMatrix = gp_Mat(0, 0, 0, 0, 1, 0, 0, 0, 1);
 	gp_Vec ptt = ft(n, t);
 	gp_XYZ tK = Ml0 * Mp0.Inverted() * ptt.XYZ();
@@ -180,7 +178,7 @@ double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) 
 		gp_Mat2d signpmat = gp_Mat2d(gp_XY(NAgammaPCK.Y(), NAgammaPCK.Z()), gp_XY(kcK.Y(), kcK.Z()));
 		double gammaPi = acos((NAgammaPCK*kcK)/ (kcK.Modulus()* NAgammaPCK.Modulus())) * (signpmat.Determinant() < 0 ? -1 : 1);
 	}
-	gp_XYZ NAalpha = gp_XYZ(ptt.Y(), -ptt.X(), 0) + gp_XYZ(0, 0, -tan(alphaP));
+	gp_XYZ NAalpha = gp_XYZ(ptt.Y(), -ptt.X(), 0) + gp_XYZ(0, 0, -tan(alphaP()));
 	NAalpha.Normalize();
 	gp_XYZ NAalphaCK = ProjectionMatrix * MAgamma * Ml0 * Mp0.Inverted() * NAalpha;
 
@@ -381,6 +379,11 @@ gp_Dir CIndInsTooth::NormalToReferencePlane() const
 double CIndInsTooth::gammaP() const
 {
 	return IndIns->IInst.RackAng;
+}
+
+double CIndInsTooth::alphaP() const
+{
+	return IndIns->IInst.ReliefAng;
 }
 
 #undef ROUND_TO_5

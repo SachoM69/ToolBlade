@@ -45,6 +45,7 @@ public:
 	virtual double ftY(int iY0, int i) = 0;
 	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) = 0;
 	virtual double gammaP() const = 0;
+	virtual double alphaP() const = 0;
 
 	// расчет углов
 	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const override;
@@ -94,6 +95,7 @@ public:
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
 	virtual gp_Dir NormalToReferencePlane() const override;
 	virtual double gammaP() const override;
+	virtual double alphaP() const override;
 
 	CIndexableInsert* IndIns;
 protected:
