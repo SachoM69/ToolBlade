@@ -17,6 +17,7 @@
 #include "DocBase.h"
 #include "ISession_Direction.h"
 #include <vector>
+#include <map>
 #include "ToolDataList.h"
 
 class CToolBladeTGDoc : public CDocBase, IInstrInsList
@@ -30,6 +31,12 @@ public:
 
 //Переменные
 private:
+	enum GraphType
+	{
+		GTRelief,
+		GTKinematicRelief,
+		GTRack
+	};
 	struct IndInsData
 	{
 		IndInsParameters libdata;
@@ -37,6 +44,8 @@ private:
 		IndInsAttributes diagdata;
 		IIndexableInsert* libcpptr;
 		IIndexableInsertSeated* liboriptr;
+		std::map<GraphType, Handle_AIS_Shape> graphs;
+		
 	};
 	std::vector<IndInsData> CutterParams;
 	ToolData Instrument;
@@ -47,6 +56,7 @@ private:
 
 	static IndInsParameters GetDefaultInsert();
 	static IndInsOrientation GetDefaultOrientation();
+
 	// Операции
 public:
 
@@ -65,14 +75,17 @@ public:
 	virtual HRESULT QueryIndInsOrientation(int index, IndInsOrientation*) override;
 	virtual HRESULT UpdateIndInsOrientation(int index, const IndInsOrientation*) override;
 	virtual HRESULT QueryToolData(ToolData*) override;
+	virtual HRESULT UpdateToolType(int type) override;
+	virtual HRESULT UpdateToolDirection(bool dir) override;
 	virtual HRESULT QueryIndInsObject(int index, const IIndexableInsert**) override;
 	virtual HRESULT QueryIndInsObjectSeated(int index, const IIndexableInsertSeated**) override;
 	virtual HRESULT RequestNewInsert(int* index_inout);
 	virtual HRESULT RequestRemoveInsert(int index);
-	virtual HRESULT ShowPoint(gp_Pnt, bool) override;
+	virtual HRESULT ShowPoint(gp_Pnt, int index, bool) override;
 	virtual HRESULT RefreshCutter(int index, const IndInsParameters*) override;
 	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) override;
-	virtual HRESULT GraphReliefAngle(int index, const IIndexableInsertSeated*) override;
+	virtual HRESULT GraphReliefAngle(int index, const IIndexableInsertSeated*, double scale) override;
+	virtual HRESULT GraphKinematicReliefAngle(int index, const IIndexableInsertSeated*, gp_Vec velocity, double scale) override;
 
 // Реализация
 public:
@@ -82,6 +95,8 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
    static void Fit();
+
+   Handle_AIS_Shape GraphFunction(const IIndexableInsertSeated*, std::function<double(Standard_Integer n, Standard_Real f)> function, const Quantity_Color&, double scale);
 
 protected:
 
@@ -94,7 +109,6 @@ protected:
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
 public:
-	afx_msg void OnNewCutter();
 	afx_msg void OnEdparams();
 	afx_msg void OnTooltype();
 	afx_msg void OnShowtool();

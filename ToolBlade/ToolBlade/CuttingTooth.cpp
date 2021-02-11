@@ -14,10 +14,13 @@ tool_diam(diameter)
 	SetA_gamma(vgamma, vphi, vlambda);
 }
 
-void CCuttingTooth::SetTipParameters(int PointIndex, double EdgePosition)
+void CCuttingTooth::SetTipParameters(int PointIndex, double EdgePosition, double AxisRotation, double Zoffset)
 {
 	MainEdgeN = PointIndex;
 	MainEdgeT = EdgePosition;
+
+	axis_rot = AxisRotation;
+	plz = Zoffset;
 }
 
 CCuttingTooth::~CCuttingTooth(void)
@@ -131,17 +134,20 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 	Fpl0 = Ml0 * mp0I;
 
 	int iK0maxX, iK0maxY;
-	ContourProminentPoints(iK0maxX, iK0maxY, 0);
+	ContourExtremities(iK0maxX, iK0maxY, 0);
 	double ty = ftY(iK0maxY, 1);
 	double tx = ftY(iK0maxX, 0);
-	gp_XYZ pmaxY = fK(int(floor(ty)), remainder(ty, 1.)).XYZ() * Fpl0;
-	gp_XYZ pmaxX = fK(int(floor(tx)), remainder(tx, 1.)).XYZ() * Fpl0;
+	gp_XYZ pmaxY = fK(int(floor(ty)), fmod(ty, 1.)).XYZ() * Fpl0;
+	gp_XYZ pmaxX = fK(int(floor(tx)), fmod(tx, 1.)).XYZ() * Fpl0;
+	m_pmaxX = pmaxX;
+	m_pmaxY = pmaxY;
 
 	gp_Vec Fpl1;
 	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.X(): -pmaxY.X()) + plx);
 	Fpl1.SetY(-pmaxY.Y() + ply);
 	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Z(): -pmaxY.Z());
-	Fpl.SetTransformation(gp_Quaternion(Fpl0), Fpl1);
+	Fpl.SetTransformation(gp_Quaternion(Fpl0), gp_Vec(0, 0, 0));// Fpl1);
+	//Fpl.SetTranslation(gp_Vec(0, 0, 0));
 }
 
 void CCuttingTooth::PlaneFromMatrixAndCoordinates()
@@ -191,9 +197,10 @@ double CCuttingTooth::EffectiveReliefAngle(Standard_Integer n, Standard_Real t) 
 
 double CCuttingTooth::EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const
 {
-	gp_Pnt ptt(0, 0, 0); //TODO
-	gp_XYZ kd = velocity.XYZ();
-	gp_XYZ tK = Ml0 * Mp0.Inverted() *ptt.XYZ();
+	gp_Mat ProjectionMatrix = gp_Mat(0, 0, 0, 0, 1, 0, 0, 0, 1);
+	gp_Vec ptt = ft(n, t);
+	gp_XYZ kd = velocity.Normalized().XYZ();
+	gp_XYZ tK = Ml0 * Mp0.Inverted() * ptt.XYZ();
 	gp_XYZ Pnk = tK ^ kd;
 	gp_XYZ ikK = kd ^ Pnk;
 	ikK.Normalize();
@@ -201,7 +208,46 @@ double CCuttingTooth::EffectiveKinematicReliefAngle(Standard_Integer n, Standard
 	gp_XYZ jkK = kkK ^ ikK;
 	gp_Mat MAgammak;
 	MAgammak.SetRows(ikK, jkK, kkK);
-	return 0.0;
+	// calculate MAgamma
+	gp_XYZ tKxy = gp_Mat(1, 0, 0, 0, 1, 0, 0, 0, 0) * tK;
+	gp_XYZ icK = tKxy.Normalized();
+	gp_XYZ kcK = gp_XYZ(0, 0, 1);
+	gp_XYZ jcK = kcK.Crossed(icK);
+	gp_Mat MAgamma;
+	MAgamma.SetRows(icK, jcK, kcK);
+	//
+	//gp_Mat NAgammaKK = ProjectionMatrix * MAgamma * Agamma;
+	//NAgammaKK.Normalize();
+	gp_XYZ yKK = gp_XYZ(-ikK.Y(), ikK.X(), 0);
+
+	gp_XYZ NAalpha = gp_XYZ(ptt.Y(), -ptt.X(), 0) + gp_XYZ(0, 0, -tan(alphaP()));
+	NAalpha.Normalize();
+
+	gp_XYZ NAalphaKK = ProjectionMatrix * MAgammak * Ml0 * Mp0.Inverted() * NAalpha;
+	gp_XYZ j = gp_XYZ(0, -1, 0);
+	gp_Mat2d signalphamat = gp_Mat2d(gp_XY(j.Y(), j.X()), gp_XY(NAalphaKK.Y(), NAalphaKK.Z()));
+	double alphaK = acos( (NAalphaKK * j) / (NAalphaKK.Modulus() * j.Modulus())) * (signalphamat.Determinant() < 0 ? -1 : 1);
+	return alphaK;
+}
+
+gp_Pnt CCuttingTooth::XExtremityPoint() const
+{
+	gp_Pnt oP;
+	oP = m_pmaxX;
+	oP.Translate(Fpl.TranslationPart());
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	return oP;
+}
+
+gp_Pnt CCuttingTooth::YExtremityPoint() const
+{
+	gp_Pnt oP;
+	oP = m_pmaxY;
+	oP.Translate(Fpl.TranslationPart());
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	return oP;
 }
 
 void CCuttingTooth::CalcCutterAngles()
@@ -266,9 +312,18 @@ public:
 	};
 	Standard_EXPORT virtual Standard_Boolean Value(const Standard_Real X, Standard_Real& F) override
 	{
-		F = (mytooth->Fpl0 * mytooth->ft(id, X).XYZ()).Coord(coord + 1);
+		gp_Vec ft = mytooth->ft(id, X);
+		gp_XYZ ft_trans =  ft.XYZ() * mytooth->Fpl0;
+		F = ft_trans.Coord(coord + 1);
+		if (F == 0)
+		{
+			// edge case workaround
+			double oppositeval;
+			Value(1 - X, oppositeval);
+			F = Sign(Epsilon(oppositeval), -oppositeval);
+		}
 		return Standard_True;
-	}
+	};
 private:
 	const CIndInsTooth* mytooth;
 	int id;
@@ -279,7 +334,7 @@ double CIndInsTooth::ftY(int iY0, int i)
 {
 	double troot = 0;
 	double t = double(iY0) / dK;
-	int t0 = iY0/dK;
+	int t0 = iY0;
 	int t1 = t0 + 1;
 	if (IndIns->d_order[t0] == 1) troot = t;
 	else
@@ -288,14 +343,13 @@ double CIndInsTooth::ftY(int iY0, int i)
 		double lower, upper;
 		ftrot.Value(0, lower);
 		ftrot.Value(1, upper);
-		if (lower * upper > 0)
-		{
-			troot = min(lower, upper);
-		} else troot = math_BracketedRoot(ftrot, 0, 1, 0.0001).Root(); //TODO: что там за функция?
+		troot = math_BracketedRoot(ftrot, 0, 1, 1e-10).Root();
 	}
+	troot += iY0;
+	if (troot < 0)  troot = IndIns->NumPoint() + troot;
 	return troot;
 }
-void CIndInsTooth::ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index)
+void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 {
 	int count = IndIns->NumPoint();
 	gp_Pnt K0max = K0(0);
@@ -309,16 +363,26 @@ void CIndInsTooth::ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index)
 		int li = i - 1; if (li < 0) li += count;
 		int ni = i + 1; if (ni >= count) ni -= count;
 		double KOi = K0(i).Y() * sg;
-		if (iy < index && K0(li).Y() * sg > KOi && KOi < K0(ni).Y() * sg)
+		if (K0(li).Y() * sg > KOi && (K0(ni).Y() * sg > KOi))
 		{
 			iy++;
-			iK0maxY = i;
+			if (!iy)
+			{
+				if (IndIns->d_order[li] > 1) iK0maxY = li;
+				else if (IndIns->d_order[i] > 1) iK0maxY = i;
+				else iK0maxY = i;
+			}
 		}
-		KOi = K0r(i).X();
-		if (K0r(li).X() < KOi && KOi >= K0r(ni).X())
+		KOi = K0(i).X();
+		if (K0(li).X() <= KOi && KOi > K0(ni).X())
 		{
 			ix++;
-			iK0maxX = i;
+			if (!ix)
+			{
+				if (IndIns->d_order[li] > 1) iK0maxX = li;
+				else if (IndIns->d_order[i] > 1) iK0maxX = i;
+				else iK0maxX = i;
+			}
 		}
 	}
 }
@@ -336,7 +400,7 @@ void CIndInsTooth::ProjectContourToPlane()
 gp_Pnt CIndInsTooth::K0(int index)
 {
 	gp_Pnt res;
-	res = Fpl0 * IndIns->node_p[index].XYZ();
+	res = Fpl0 * IndIns->node_p[IndIns->npmain[index]].XYZ();
 	return res;
 }
 
@@ -353,7 +417,10 @@ gp_Pnt CIndInsTooth::K0r(int index)
 TopoDS_Shape CIndInsTooth::RotatedIntoPlace()
 {
 	TopoDS_Shape shp = IndIns->ConstructToolBlade();
-	shp.Move(TopLoc_Location(Fpl));
+	gp_Trsf inst_rot_part, z_offset_part;
+	inst_rot_part.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	z_offset_part.SetTranslation(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	shp.Move(TopLoc_Location(z_offset_part * inst_rot_part * Fpl ));
 	return shp;
 }
 
@@ -366,9 +433,19 @@ void CIndInsTooth::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_V
 	oP.Transform(Fpl);
 	oV.Transform(Fpl);
 	oA.Transform(Fpl);
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	oV.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	oA.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
+	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	oA.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
 	P = oP;
 	V = oV;
 	Ax3 = oA;
+}
+
+int CIndInsTooth::NumPoint() const
+{
+	return IndIns->NumPoint();
 }
 
 gp_Dir CIndInsTooth::NormalToReferencePlane() const

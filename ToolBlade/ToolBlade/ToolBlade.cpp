@@ -16,7 +16,7 @@ __declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters* IIt
 {
 	//IIt->IGroup = 0; IIt->IIForm = 0;
 	IndInsParameters* b = new IndInsParameters; b->IGroup = 0; b->IIForm = 0; b->FormChar = 'P'; b->n = 6;
-	b->eps = 0; b->ReliefAng = 3; b->RackAng = 10/180*M_PI; b->HT = 0; b->VertForm = 2; b->r = 0.5;
+	b->eps = 0; b->ReliefAng = 3 / 180 * M_PI; b->RackAng = 10/180*M_PI; b->HT = 0; b->VertForm = 2; b->r = 0.5;
 	b->Dim = 6.35; b->Thick = 1.59; b->Dir = 0;
 	b->DHole = 2.5;
 	b->TolClass = 'A';
@@ -42,7 +42,7 @@ __declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert* II,
 	CIndexableInsert* PrefdIndIns = dynamic_cast<CIndexableInsert*>(II);
 	//CIndInsTooth* mi = new CIndInsTooth(DEG(20), DEG(40), DEG(0), IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
 	CIndInsTooth* mi = new CIndInsTooth(IIo->Gamma, IIo->Phi, IIo->Lambda, IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
-	mi->SetTipParameters(IIo->PointIndex, IIo->EdgePosition);
+	mi->SetTipParameters(IIo->PointIndex, IIo->EdgePosition, IIo->AxisRotation, IIo->Zoffset);
 	mi->CalcCutterAngles();
 	return mi;
 }

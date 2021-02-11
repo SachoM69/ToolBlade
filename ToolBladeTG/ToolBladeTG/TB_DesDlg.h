@@ -26,6 +26,9 @@ public:
 	virtual BOOL OnInitDialog();
 	void StoreToParams(IndInsParameters* IIt);
 	void LoadFromParams(const IndInsParameters* IIt);
+
+	void StoreToolType();
+	void StoreToolDir();
 private:
 	void CollectDlgData();
 	void UnpackDlgData();

@@ -9,7 +9,8 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
-#include <windows.h>
+//#include <windows.h>
+#define min(a, b) ((a) < (b)? (a):(b))
 
 #include <algorithm>
 
@@ -156,3 +157,5 @@
 #include <WNT_Window.hxx>
 
 #include "ToolBlade.h"
+
+#define Tolerance() (1e-6)

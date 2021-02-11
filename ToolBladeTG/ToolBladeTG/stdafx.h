@@ -116,6 +116,7 @@
 #include <Graphic3d_Group.hxx>
 #include <Standard_NullObject.hxx>
 #include <AIS_Point.hxx>
+#include <Geom_Axis2Placement.hxx>
 
 /*
 #include <AIS_Drawer.hxx>
@@ -236,3 +237,5 @@
 #if defined(_AFXDLL)
 #undef _AFXDLL
 #endif
+
+#include <functional>

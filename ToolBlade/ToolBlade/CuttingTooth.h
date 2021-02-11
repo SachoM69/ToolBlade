@@ -13,7 +13,7 @@ public:
 
 	~CCuttingTooth(void);
 	CCuttingTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT , DirToolType DTT);
-	void SetTipParameters(int PointIndex, double EdgePosition);
+	void SetTipParameters(int PointIndex, double EdgePosition, double AxisRotation, double Zoffset);
 
 
 	void SetAngles(double vgamma, double valpha, double vphi, double vphi1, double vlambda);
@@ -43,13 +43,15 @@ public:
 	virtual gp_Vec ft(int PointIndex, double ti) const = 0;
 	virtual gp_Pnt fK(int PointIndex, double ti) const = 0;
 	virtual double ftY(int iY0, int i) = 0;
-	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) = 0;
+	virtual void ContourExtremities(int& iK0maxX, int& iK0maxY, int index) = 0;
 	virtual double gammaP() const = 0;
 	virtual double alphaP() const = 0;
 
 	// расчет углов
 	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const override;
 	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const override;
+	virtual gp_Pnt XExtremityPoint() const override;
+	virtual gp_Pnt YExtremityPoint() const override;
 protected:
 	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;
@@ -63,12 +65,15 @@ protected:
 	EdgeDir MainEdgeDir;//направление резания режущей кромки
 	gp_Ax3 IIMainEdgeAx0;//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке
 	gp_Dir A_gamma;//нормаль к передней поверхности зуба
-	Standard_Real plx, ply; // координаты вершины
+	Standard_Real plx, ply, plz; // координаты вершины
+	Standard_Real axis_rot; // угол поворота в положение в инструменте(для фрез)
 	gp_Mat Fpl0; // матрица поворота в положение в инструменте
 	gp_Mat Mp0, Ml0;
 	gp_Trsf Fpl;
 	gp_Pln PrincipalPlane;
 	std::vector<gp_Pnt> ProjectedPts;
+	gp_Pnt m_pmaxX;
+	gp_Pnt m_pmaxY;
 
 	friend class ftrot;
 };
@@ -87,12 +92,13 @@ public:
 	virtual gp_Pnt fK(int PointIndex, double ti) const override;
 					 // Унаследовано через CCuttingTooth
 	virtual double ftY(int iY0, int i) override;
-	virtual void ContourProminentPoints(int& iK0maxX, int& iK0maxY, int index) override;
+	virtual void ContourExtremities(int& iK0maxX, int& iK0maxY, int index) override;
 	virtual void ProjectContourToPlane() override;
 	gp_Pnt K0(int index);
 	gp_Pnt K0r(int index);
 	virtual TopoDS_Shape RotatedIntoPlace() override;
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
+	virtual int NumPoint() const override;
 	virtual gp_Dir NormalToReferencePlane() const override;
 	virtual double gammaP() const override;
 	virtual double alphaP() const override;

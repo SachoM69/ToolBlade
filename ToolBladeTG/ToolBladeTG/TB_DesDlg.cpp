@@ -110,8 +110,8 @@ BOOL CTB_DesDlg::OnInitDialog()
 	ImageList->Create(16, 16, TRUE, 1, 1);
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONSHOWN));
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONHIDDEN));
-	IndInsListView.SetImageList(ImageList, LVSIL_SMALL);
-	//TODO IndInsListView.SetExtendedStyle(LVS_EX_CHECKBOXES);
+	//IndInsListView.SetImageList(ImageList, LVSIL_SMALL);
+	IndInsListView.SetExtendedStyle(LVS_EX_CHECKBOXES);
 	UpdateInsertList();
 	ToolTypeList.SetCurSel(b.ToolType);
 	CuttingDirList.SetCurSel(b.CutDirection);
@@ -381,6 +381,44 @@ void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 
 }
 
+void CTB_DesDlg::StoreToolType()
+{
+	int sel = ToolTypeList.GetCurSel();
+	ToolType tt;
+	switch (sel)
+	{
+	case 1:
+		tt = Boring_Cutter;
+		break;
+	case 2:
+		tt = Drilling_Tool;
+		break;
+	case 3:
+		tt = Milling_Tool;
+		break;
+	default:
+		tt = Turning_Cutter;
+		break;
+	}
+	InsertProvider->UpdateToolType(tt);
+}
+
+void CTB_DesDlg::StoreToolDir()
+{
+	int sel = CuttingDirList.GetCurSel();
+	DirToolType dtt;
+	switch (sel)
+	{
+	case 1:
+		dtt = DirTool_Left;
+		break;
+	default:
+		dtt = DirTool_Right;
+		break;
+	}
+	InsertProvider->UpdateToolDirection(dtt);
+}
+
 
 void CTB_DesDlg::OnCbnSelchangeIndinsform()
 {
@@ -393,7 +431,6 @@ void CTB_DesDlg::OnCbnSelchangeIndinsform()
 
 void CTB_DesDlg::OnCbnSelchangeIgroup()
 {
-	// TODO: Add your control notification handler code here
 	//IDC_INDINSFORM
 	int i=IIFormList.GetCurSel();
 	int iG = IGroupList.GetCurSel();
@@ -672,15 +709,17 @@ void CTB_DesDlg::OnClose()
 void CTB_DesDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
-	InsertProvider->ShowPoint(gp_Pnt(), false);
+	InsertProvider->ShowPoint(gp_Pnt(), 0, false);
 	delete ImageList;
-	// TODO: Add your message handler code here
 }
 
 
 void CTB_DesDlg::OnBnClickedOk()
 {
 	CollectDlgData();
+
+	StoreToolType();
+	StoreToolDir();
 
 	IndInsParameters a;
 	StoreToParams(&a);
@@ -805,7 +844,7 @@ void CTB_DesDlg::DrawEdgePoint()
 	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	gp_Pnt edgept; gp_Vec V; gp_Ax3 Ax3;
 	object->IIVertex(II_ActiveEdge,EdgePos_t,edgept,V, Ax3);
-	InsertProvider->ShowPoint(edgept,true);
+	InsertProvider->ShowPoint(edgept,0,true);
 	//нарисовать стрелку из точки edgept в направлении V
 }
 
@@ -819,14 +858,17 @@ void CTB_DesDlg::OnBnClickedRefresh()
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
 }
 
-void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR *pNMHDR, LRESULT *pResult)
+void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	int index = pNMLV->iItem;
-	IndInsAttributes atrs;
-	InsertProvider->QueryIndInsAttributes(index, &atrs);
-	atrs.IsDisabled = (pNMLV->uNewState==1);
-	InsertProvider->UpdateIndInsAttributes(index, &atrs);
+	if (pNMLV->uNewState & LVIS_STATEIMAGEMASK && pNMLV->iItem >= 0)
+	{
+		IndInsAttributes atrs;
+		InsertProvider->QueryIndInsAttributes(index, &atrs);
+		atrs.IsDisabled = IndInsListView.GetCheck(pNMLV->iItem)==FALSE;
+		InsertProvider->UpdateIndInsAttributes(index, &atrs);
+	}
 	*pResult = 0;
 }
 
@@ -859,6 +901,7 @@ void CTB_DesDlg::UpdateInsertList(void)
 		if(i!=CurrentIndex) a.Format(_T("%d"), i);
 		else a.Format(_T("%d (активна)"), i);
 		IndInsListView.InsertItem(i, a, c.IsDisabled);
+		IndInsListView.SetCheck(i, c.IsDisabled?FALSE:TRUE);
 	}
 }
 

@@ -38,7 +38,6 @@
 IMPLEMENT_DYNCREATE(CToolBladeTGDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CToolBladeTGDoc, CDocument)
-	ON_COMMAND(ID_NEW_CUTTER, &CToolBladeTGDoc::OnNewCutter)
 	ON_COMMAND(ID_EDPARAMS, &CToolBladeTGDoc::OnEdparams)
 	ON_COMMAND(ID_TOOLTYPE, &CToolBladeTGDoc::OnTooltype)
 	ON_COMMAND(ID_SHOWTOOL, &CToolBladeTGDoc::OnShowtool)
@@ -53,15 +52,17 @@ CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 	IndInsParameters IndIns = GetDefaultInsert();
 	IndInsOrientation IndOri = GetDefaultOrientation();
 	IndInsData idt;
-	idt.libdata=IndIns;
-	idt.liboridata = IndOri;
 	idt.diagdata.IsDisabled=false;
 	idt.libcpptr=nullptr;
 	idt.liboriptr = nullptr;
-	CutterParams.push_back(idt);
 	Instrument.ActualToothCount=Instrument.UsedToothCount=1;
 	Instrument.CutDirection=false;
 	Instrument.ToolType=0;
+	IndOri.Dir = DirToolType(Instrument.CutDirection);
+	IndOri.Type = ToolType(Instrument.ToolType);
+	idt.libdata=IndIns;
+	idt.liboridata = IndOri;
+	CutterParams.push_back(idt);
 }
 
 CToolBladeTGDoc::~CToolBladeTGDoc()
@@ -85,6 +86,7 @@ IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 	IndIns.B=IndIns.L=0;
 	IndIns.eps=0;
 	IndIns.r=0.1;
+	IndIns.RackAng = 0;
 	//IndIns.ActEdge=0;
 	return IndIns;
 }
@@ -92,7 +94,7 @@ IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 IndInsOrientation CToolBladeTGDoc::GetDefaultOrientation()
 {
 	IndInsOrientation IndOri;
-	IndOri.Diameter = 0.1;
+	IndOri.Diameter = 100;
 	IndOri.Dir = DirTool_Right;
 	IndOri.Type = Turning_Cutter;
 	IndOri.PointIndex = 0;
@@ -100,16 +102,31 @@ IndInsOrientation CToolBladeTGDoc::GetDefaultOrientation()
 	IndOri.Gamma = 0;
 	IndOri.Lambda = 0;
 	IndOri.Phi = 0;
+	IndOri.AxisRotation = 0;
+	IndOri.Zoffset = 0;
 	return IndOri;
 }
+
+#include <AIS_Trihedron.hxx>
 
 BOOL CToolBladeTGDoc::OnNewDocument()
 {
 	if (!CDocument::OnNewDocument())
 		return FALSE;
 
-	// TODO: добавьте код повторной инициализации
-	// (Документы SDI будут повторно использовать этот документ)
+	//for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
+	/*MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
+	MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
+	MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
+	for each (auto & mca in MyCoolArrow)
+		myAISContext->Display(mca, true);*/
+
+	gp_Ax2 ax = gp_Ax2(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0));
+
+	Handle(Geom_Axis2Placement) myTrihedronAxis = new Geom_Axis2Placement(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), gp_Vec(10, 0, 0));
+	AIS_Trihedron* tri = new AIS_Trihedron(myTrihedronAxis);
+	tri->SetSize(10);
+	myAISContext->Display(tri, Standard_True);
 
 	return TRUE;
 }
@@ -206,15 +223,10 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsParameters *a)
 {
 	try
 	{
+		size_t indop(index);
+		if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 		if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
 		CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, a);
-		for each(auto& mca in MyCoolArrow) if(!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
-		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
-		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
-		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
-		//for (int i=0; i<3; i++) 
-		//for each(auto& mca in MyCoolArrow)
-			//myAISContext->Display(mca);
 
 	}
 	catch(Standard_OutOfRange& e)
@@ -240,13 +252,11 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
 {
 	try
 	{
+		size_t indop(index);
+		if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 		if (!CutterParams[index].libcpptr)
 			CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
 		CutterParams[index].liboriptr = OrientInsertAndPreview(myAISContext, CutterParams[index].libcpptr, a);
-		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
-		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
-		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
-		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
 	}
 	catch (Standard_OutOfRange& e)
 	{
@@ -267,39 +277,6 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
 	return S_OK;
 }
 
-
-void CToolBladeTGDoc::OnNewCutter()
-{
-	try
-	{
-		if(CutterParams[0].libcpptr) DestroyInsert(CutterParams[0].libcpptr);
-		CutterParams[0].libcpptr = CreateInsertAndPreview(myAISContext, &CutterParams.begin()->libdata); // не самый красивый способ
-		for each(auto& mca in MyCoolArrow) if(!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
-		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
-		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
-		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
-		//for (int i=0; i<3; i++) 
-		for each(auto& mca in MyCoolArrow)
-		myAISContext->Display(mca, true);
-
-	}
-	catch(Standard_OutOfRange& e)
-	{
-		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
-	}
-	catch(Standard_NullObject& e)
-	{
-		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
-	}
-	catch(Standard_NoSuchObject& e)
-	{
-		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
-	}
-	catch(Standard_Failure &e)
-	{
-		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
-	}
-}
 
 void CToolBladeTGDoc::OnEdparams()
 {
@@ -364,6 +341,26 @@ HRESULT CToolBladeTGDoc::QueryToolData(ToolData* tda)
 	return S_OK;
 }
 
+HRESULT CToolBladeTGDoc::UpdateToolType(int type)
+{
+	Instrument.ToolType = type;
+	for (int i = 0; i < CutterParams.size(); i++)
+	{
+		CutterParams[i].liboridata.Type = ToolType(Instrument.ToolType);
+	}
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::UpdateToolDirection(bool dir)
+{
+	Instrument.CutDirection = dir;
+	for (int i = 0; i < CutterParams.size(); i++)
+	{
+		CutterParams[i].liboridata.Dir = DirToolType(Instrument.CutDirection);
+	}
+	return S_OK;
+}
+
 HRESULT CToolBladeTGDoc::QueryIndInsObject(int index, const IIndexableInsert** optr)
 {
 	size_t indop(index);
@@ -379,6 +376,8 @@ HRESULT CToolBladeTGDoc::QueryIndInsObjectSeated(int index, const IIndexableInse
 	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 	if(!CutterParams[index].libcpptr) CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
 	if(CutterParams[index].liboriptr) DestroyInsert(CutterParams[index].liboriptr);
+	CutterParams[index].liboridata.Dir = DirToolType(Instrument.CutDirection);
+	CutterParams[index].liboridata.Type = ToolType(Instrument.ToolType);
 	*optr = CutterParams[index].liboriptr = OrientInsert(CutterParams[index].libcpptr , &CutterParams[index].liboridata);
 	return S_OK;
 }
@@ -401,6 +400,8 @@ HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
 	{
 		idt.libdata = GetDefaultInsert();
 		idt.liboridata = GetDefaultOrientation();
+		idt.liboridata.Dir = DirToolType(Instrument.CutDirection);
+		idt.liboridata.Type = ToolType(Instrument.ToolType);
 	}
 	else
 	{
@@ -428,15 +429,24 @@ HRESULT CToolBladeTGDoc::RequestRemoveInsert(int index)
 	return S_OK;
 }
 
-HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, bool show)
+HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, int index, bool show)
 {
-	myAISContext->Erase(VisPnt, true);
+	static std::vector<Handle_AIS_Point> ppp;
+	if (ppp.size() <= index) ppp.push_back(0);
+	myAISContext->Erase(ppp[index], true);
+	if (show)
+	{
+		Handle_Geom_CartesianPoint c = new Geom_CartesianPoint(a);
+		ppp[index] = new AIS_Point(c);
+		myAISContext->Display(ppp[index], true);
+	}
+	/*myAISContext->Erase(VisPnt, true);
 	if(show)
 	{
 		Handle_Geom_CartesianPoint c = new Geom_CartesianPoint(a);
 		VisPnt = new AIS_Point(c);
 		myAISContext->Display(VisPnt, true);
-	}
+	}*/
 	return S_OK;
 }
 
@@ -482,11 +492,33 @@ void CToolBladeTGDoc::OnShowtool()
 	}
 }
 
-HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeated* iis)
+HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeated* iis, double scale)
 {
 	size_t indop(index);
 	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
-	int pt_cnt = CutterParams[index].libcpptr->NumPoint();
+	Handle_AIS_Shape oldgraph = CutterParams[index].graphs[GTRelief];
+	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
+	auto graph = GraphFunction(iis, [=](Standard_Integer n, Standard_Real f)->double {return iis->EffectiveReliefAngle(n, f); }, Quantity_NOC_BLUE1, scale);
+	CutterParams[index].graphs[GTRelief] = graph;
+	myAISContext->Display(graph, Standard_True);
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::GraphKinematicReliefAngle(int index, const IIndexableInsertSeated* iis, gp_Vec velocity, double scale)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	Handle_AIS_Shape oldgraph = CutterParams[index].graphs[GTKinematicRelief];
+	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
+	auto graph = GraphFunction(iis, [=](Standard_Integer n, Standard_Real f)->double {return iis->EffectiveKinematicReliefAngle(n, f, velocity); }, Quantity_NOC_HONEYDEW, scale);
+	CutterParams[index].graphs[GTKinematicRelief] = graph;
+	myAISContext->Display(graph, Standard_True);
+	return S_OK;
+}
+
+Handle_AIS_Shape CToolBladeTGDoc::GraphFunction(const IIndexableInsertSeated* iis, std::function<double(Standard_Integer n, Standard_Real f)> function, const Quantity_Color& clr, double scale)
+{
+	int pt_cnt = iis->NumPoint();
 	gp_XYZ norm = iis->NormalToReferencePlane().XYZ();
 
 	TopoDS_Shape ToolBlade;
@@ -505,7 +537,7 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 			gp_Vec tangent;
 			gp_Ax3 u;
 			iis->IIVertex(i, f, point, tangent, u);
-			double magn = iis->EffectiveReliefAngle(i, f)*3;
+			double magn = function(i, f) * scale;
 			gp_XYZ nrm = tangent.XYZ(); nrm ^= norm;
 			gp_Pnt waypoint = point.Translated(nrm.Normalized() * magn);
 			//waypoint.SetZ(waypoint.Z() - 1);
@@ -556,7 +588,6 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 	}
 	TopoDS_Face aF = BRepBuilderAPI_MakeFace(aW);
 	StaticReliefAngles = new AIS_Shape(aW);
-	StaticReliefAngles->SetColor(Quantity_NOC_BLUE1);
-	myAISContext->Display(StaticReliefAngles, Standard_True);
-	return S_OK;
+	StaticReliefAngles->SetColor(clr);
+	return StaticReliefAngles;
 }

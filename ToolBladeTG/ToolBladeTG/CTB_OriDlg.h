@@ -30,6 +30,11 @@ protected:
 	void UpdateInsertList(void);
 	void UpdateInsertListSoft(void);
 
+	void StoreKinematicParams();
+	void LoadKinematicParams(double feedx, double feedy, double defaultn, double defaultv);
+
+	double GetScale();
+	void SetScale(double scale);
 private:
 	IInstrInsList* InsertProvider;
 	int CurrentIndex;
@@ -53,4 +58,27 @@ public:
 	afx_msg void OnCbnSelchangeActiveedge();
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedDisplayreliefangles();
+	afx_msg void OnEnChangeFeedx();
+	afx_msg void OnEnChangeFeedy();
+	afx_msg void OnBnClickedDisplaykinematicreliefangles();
+	afx_msg void OnEnChangeRpm();
+	afx_msg void OnEnChangeVelocity();
+
+	double feedx;
+	double feedy;
+	double relvel;
+
+	CEdit FeedXTB;
+	CEdit FeedYTB;
+	CEdit RPMTB;
+	CEdit VelocityTB;
+	CButton RPMRadio;
+	CButton VelocityRadio;
+	CEdit ScaleTB;
+	CEdit AxisRotTB;
+	CEdit ZOffsetTB;
+	afx_msg void OnEnChangeScale();
+	afx_msg void OnEnChangeAxisrot();
+	afx_msg void OnEnChangeZoffset();
+	afx_msg void OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult);
 };
