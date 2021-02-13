@@ -725,6 +725,7 @@ void CTB_DesDlg::OnBnClickedOk()
 	StoreToParams(&a);
 	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 
 	CDialog::OnOK();
 }
@@ -800,6 +801,7 @@ void CTB_DesDlg::OnList_Dblclk(NMHDR *pNMHDR, LRESULT *pResult)
 		UpdateInsertList();
 	}
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 
 	*pResult = 0;
 }
@@ -856,6 +858,7 @@ void CTB_DesDlg::OnBnClickedRefresh()
 	IndInsParameters a;
 	StoreToParams(&a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 }
 
 void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult)

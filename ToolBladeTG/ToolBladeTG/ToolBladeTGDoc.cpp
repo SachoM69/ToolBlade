@@ -277,6 +277,12 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
 	return S_OK;
 }
 
+HRESULT CToolBladeTGDoc::UpdateDisplay()
+{
+	myAISContext->UpdateCurrentViewer();
+	return S_OK;
+}
+
 
 void CToolBladeTGDoc::OnEdparams()
 {
@@ -433,12 +439,12 @@ HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, int index, bool show)
 {
 	static std::vector<Handle_AIS_Point> ppp;
 	if (ppp.size() <= index) ppp.push_back(0);
-	myAISContext->Erase(ppp[index], true);
+	myAISContext->Erase(ppp[index], false);
 	if (show)
 	{
 		Handle_Geom_CartesianPoint c = new Geom_CartesianPoint(a);
 		ppp[index] = new AIS_Point(c);
-		myAISContext->Display(ppp[index], true);
+		myAISContext->Display(ppp[index], false);
 	}
 	/*myAISContext->Erase(VisPnt, true);
 	if(show)
@@ -500,7 +506,7 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
 	auto graph = GraphFunction(iis, [=](Standard_Integer n, Standard_Real f)->double {return iis->EffectiveReliefAngle(n, f); }, Quantity_NOC_BLUE1, scale);
 	CutterParams[index].graphs[GTRelief] = graph;
-	myAISContext->Display(graph, Standard_True);
+	myAISContext->Display(graph, Standard_False);
 	return S_OK;
 }
 
@@ -521,7 +527,7 @@ HRESULT CToolBladeTGDoc::GraphKinematicReliefAngle(int index, const IIndexableIn
 	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
 	auto graph = GraphFunction(iis, [=](Standard_Integer n, Standard_Real f)->double {return iis->EffectiveKinematicReliefAngle(n, f, velocity); }, Quantity_NOC_HONEYDEW, scale);
 	CutterParams[index].graphs[GTKinematicRelief] = graph;
-	myAISContext->Display(graph, Standard_True);
+	myAISContext->Display(graph, Standard_False);
 	return S_OK;
 }
 

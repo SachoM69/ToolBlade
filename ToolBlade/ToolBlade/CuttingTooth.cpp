@@ -375,7 +375,9 @@ void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 			iy++;
 			if (!iy)
 			{
-				iK0maxY = i;
+				if (IndIns->d_order[li] > 1) iK0maxY = li;
+				else if (IndIns->d_order[i] > 1) iK0maxY = i;
+				else iK0maxY = i;
 			}
 		}
 		KOi = K0r(i).X();
@@ -384,7 +386,9 @@ void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 			ix++;
 			if (!ix)
 			{
-				iK0maxX = i;
+				if (IndIns->d_order[li] > 1) iK0maxX = li;
+				else if (IndIns->d_order[i] > 1) iK0maxX = i;
+				else iK0maxX = i;
 			}
 		}
 	}

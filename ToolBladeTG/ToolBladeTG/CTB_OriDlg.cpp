@@ -76,6 +76,8 @@ void CTB_OriDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, ShowReliefKinematicGraph);
 	DDX_Control(pDX, IDC_DISPLAYRELIEFANGLESCHECK, ShowReliefGraphCheck);
 	DDX_Control(pDX, IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, ShowReliefKinematicGraphCheck);
+	DDX_Control(pDX, IDC_SELECTFPM, FPMRadio);
+	DDX_Control(pDX, IDC_SELECTFPR, FPRRadio);
 }
 
 
@@ -100,6 +102,10 @@ BEGIN_MESSAGE_MAP(CTB_OriDlg, CDialogEx)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_IILIST, &CTB_OriDlg::OnLvnItemchangedIilist)
 	ON_BN_CLICKED(IDC_DISPLAYRELIEFANGLESCHECK, &CTB_OriDlg::OnBnClickedDisplayreliefanglescheck)
 	ON_BN_CLICKED(IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, &CTB_OriDlg::OnBnClickedDisplaykinematicreliefanglescheck)
+	ON_BN_CLICKED(IDC_SELECTFPM, &CTB_OriDlg::OnBnClickedSelectfpm)
+	ON_BN_CLICKED(IDC_SELECTFPR, &CTB_OriDlg::OnBnClickedSelectfpr)
+	ON_BN_CLICKED(IDC_SELECTRPM, &CTB_OriDlg::OnBnClickedSelectrpm)
+	ON_BN_CLICKED(IDC_SELECTVELOCITY, &CTB_OriDlg::OnBnClickedSelectvelocity)
 END_MESSAGE_MAP()
 
 
@@ -248,10 +254,7 @@ void CTB_OriDlg::OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult)
 void CTB_OriDlg::OnEnChangeGamma()
 {
 	if (CurrentlyUpdating) return;
-	IndInsOrientation a;
-	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
-	StoreToParams(&a);
-	UpdateDisplayDefault(&a);
+	UpdateDisplayDefault();
 }
 
 
@@ -310,12 +313,14 @@ void CTB_OriDlg::OnBnClickedOk()
 void CTB_OriDlg::OnEnChangeFeedx()
 {
 	StoreKinematicParams();
+	UpdateDisplayDefault();
 }
 
 
 void CTB_OriDlg::OnEnChangeFeedy()
 {
 	StoreKinematicParams();
+	UpdateDisplayDefault();
 }
 
 
@@ -323,6 +328,7 @@ void CTB_OriDlg::OnEnChangeRpm()
 {
 	this->CheckRadioButton(RPMRadio.GetDlgCtrlID(), VelocityRadio.GetDlgCtrlID(), RPMRadio.GetDlgCtrlID());
 	StoreKinematicParams();
+	UpdateDisplayDefault();
 }
 
 
@@ -330,34 +336,51 @@ void CTB_OriDlg::OnEnChangeVelocity()
 {
 	this->CheckRadioButton(RPMRadio.GetDlgCtrlID(), VelocityRadio.GetDlgCtrlID(), VelocityRadio.GetDlgCtrlID());
 	StoreKinematicParams();
+	UpdateDisplayDefault();
 }
 
 void CTB_OriDlg::StoreKinematicParams()
 {
 	if (CurrentlyUpdating) return;
 	CString s_fx, s_fy, s_v, s_rpm;
-	FeedXTB.GetWindowText(s_fx);
-	feedx = _wtof(s_fx);
-	FeedYTB.GetWindowText(s_fy);
-	feedy = _wtof(s_fy);
+	CString s_diam;
+	DiamTB.GetWindowText(s_diam);
+	double diam = _wtof(s_diam);
+	double velocity = -1;
+	double rpm = -1;
 	int rpmcheck = RPMRadio.GetCheck();
 	int velcheck = VelocityRadio.GetCheck();
 	if (rpmcheck)
 	{
 		RPMTB.GetWindowText(s_rpm);
-		double rpm = _wtof(s_rpm);
-		CString s_diam;
-		DiamTB.GetWindowText(s_diam);
-		double diam = _wtof(s_diam);
-		relvel = M_PI * diam * rpm / 60;
-		feedx *= rpm / 60;
-		feedy *= rpm / 60;
+		rpm = _wtof(s_rpm);
+		velocity = M_PI * diam * rpm / 60;
 	}
 	else if (velcheck)
 	{
 		VelocityTB.GetWindowText(s_v);
-		relvel = _wtof(s_v) / 60;
+		velocity = _wtof(s_v) / 60;
+		rpm = velocity * 60 / M_PI / diam;
 	}
+	FeedXTB.GetWindowText(s_fx);
+	double feedx = _wtof(s_fx);
+	FeedYTB.GetWindowText(s_fy);
+	double feedy = _wtof(s_fy);
+	int mmpscheck = FPMRadio.GetCheck();
+	int mmperrevcheck = FPRRadio.GetCheck();
+	if (mmpscheck)
+	{
+		feedx /= 60;
+		feedy /= 60;
+	}
+	else if (mmperrevcheck)
+	{
+		feedx *= rpm / 60;
+		feedy *= rpm / 60;
+	}
+	FeedX_PS = feedx;
+	FeedY_PS = feedy;
+	Velocity_MPS = velocity;
 }
 
 void CTB_OriDlg::LoadKinematicParams(double l_feedx, double l_feedy, double defaultn, double defaultv)
@@ -372,12 +395,13 @@ void CTB_OriDlg::LoadKinematicParams(double l_feedx, double l_feedy, double defa
 	FeedYTB.SetWindowText(s_fy);
 	VelocityTB.SetWindowText(s_v);
 	RPMTB.SetWindowText(s_rpm);
-	feedx = l_feedx;
-	feedy = l_feedy;
+	FeedX_PS = l_feedx;
+	FeedY_PS = l_feedy;
 	CString s_diam;
 	DiamTB.GetWindowText(s_diam);
 	double diam = _wtof(s_diam);
-	relvel = M_PI * diam;
+	Velocity_MPS = M_PI * diam;
+	this->CheckRadioButton(FPMRadio.GetDlgCtrlID(), FPRRadio.GetDlgCtrlID(), FPMRadio.GetDlgCtrlID());
 	CurrentlyUpdating = false;
 }
 
@@ -470,8 +494,36 @@ void CTB_OriDlg::UpdateDisplay(const IndInsOrientation* orientation_data, int fl
 	{
 		const IIndexableInsertSeated* iis;
 		InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
-		gp_Vec vel = gp_Vec(feedx, feedy, relvel);
+		gp_Vec vel = gp_Vec(FeedX_PS, FeedY_PS, Velocity_MPS);
 		InsertProvider->GraphKinematicReliefAngle(CurrentIndex, iis, vel, GetScale());
 	}
 	else InsertProvider->HideKinematicReliefAngle(CurrentIndex);
+	InsertProvider->UpdateDisplay();
+}
+
+void CTB_OriDlg::OnBnClickedSelectfpm()
+{
+	StoreKinematicParams();
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedSelectfpr()
+{
+	StoreKinematicParams();
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedSelectrpm()
+{
+	StoreKinematicParams();
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedSelectvelocity()
+{
+	StoreKinematicParams();
+	UpdateDisplayDefault();
 }

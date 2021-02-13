@@ -31,7 +31,7 @@ protected:
 	void UpdateInsertListSoft(void);
 
 	void StoreKinematicParams();
-	void LoadKinematicParams(double feedx, double feedy, double defaultn, double defaultv);
+	void LoadKinematicParams(double FeedX_PS, double FeedY_PS, double defaultn, double defaultv);
 
 	double GetScale();
 	void SetScale(double scale);
@@ -71,9 +71,9 @@ public:
 	afx_msg void OnEnChangeRpm();
 	afx_msg void OnEnChangeVelocity();
 
-	double feedx;
-	double feedy;
-	double relvel;
+	double FeedX_PS;
+	double FeedY_PS;
+	double Velocity_MPS;
 
 	CEdit FeedXTB;
 	CEdit FeedYTB;
@@ -94,4 +94,10 @@ public:
 	BOOL ShowReliefKinematicGraph;
 	CButton ShowReliefGraphCheck;
 	CButton ShowReliefKinematicGraphCheck;
+	CButton FPMRadio;
+	CButton FPRRadio;
+	afx_msg void OnBnClickedSelectfpm();
+	afx_msg void OnBnClickedSelectfpr();
+	afx_msg void OnBnClickedSelectrpm();
+	afx_msg void OnBnClickedSelectvelocity();
 };

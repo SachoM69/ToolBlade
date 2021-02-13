@@ -31,6 +31,7 @@ interface IInstrInsList abstract
 	virtual HRESULT ShowPoint(gp_Pnt, int index, bool) = 0;
 	virtual HRESULT RefreshCutter(int index, const IndInsParameters*) = 0;
 	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) = 0;
+	virtual HRESULT UpdateDisplay() = 0;
 
 	virtual HRESULT GraphReliefAngle (int index, const IIndexableInsertSeated*, double scale) = 0;
 	virtual HRESULT HideReliefAngle(int index) = 0;

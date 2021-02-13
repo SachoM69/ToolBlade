@@ -26,7 +26,7 @@ __declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_Intera
 	if(AISC->DisplayStatus(DisplayedShape)==AIS_DS_Displayed) AISC->Erase(DisplayedShape, false);
 	DisplayedShape = new AIS_Shape(iii->ConstructToolBlade());
 	AISC->SetDisplayMode(AIS_Shaded, false);
-	AISC->Display(DisplayedShape, true);
+	AISC->Display(DisplayedShape, false);
 	thisAISC = AISC;
 	return iii;
 }
@@ -48,7 +48,7 @@ __declspec(dllexport) IIndexableInsertSeated* OrientInsertAndPreview(Handle_AIS_
 	CIndInsTooth* mi = dynamic_cast<CIndInsTooth*>(OrientInsert(II, IIo));
 	DisplayedShape = new AIS_Shape(mi->RotatedIntoPlace());
 	AISC->SetDisplayMode(AIS_Shaded, false);
-	AISC->Display(DisplayedShape, true);
+	AISC->Display(DisplayedShape, false);
 	thisAISC = AISC;
 	return mi;
 }
