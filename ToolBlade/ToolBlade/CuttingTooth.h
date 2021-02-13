@@ -4,63 +4,111 @@
 #include "IndexableIns.h"
 #include "math.h"
 
-class CCutTip //вершина инструмента
-{
-public:
-	CCutTip(gp_Ax3 Ax3)
-	{CutTip=Ax3;};
-	~CCutTip(){};
-protected:
-	gp_Ax3 CutTip; //вершина зуба
-
-};
-
-class CCuttingTooth :public CCutTip /*CPart*/ //Зуб режущего инструмента
+// класс, производящий расчеты
+// считаем в конструкторе.
+class CCuttingTooth abstract :public IIndexableInsertSeated //Зуб режущего инструмента
 {
 public:
 	//углы зуба
 
 	~CCuttingTooth(void);
-	CCuttingTooth(double vgamma, double valpha, double vphi, double vphi1, double vlambda,ToolType TT , DirToolType DTT);
+	CCuttingTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT , DirToolType DTT);
+	void SetTipParameters(int PointIndex, double EdgePosition, double AxisRotation, double Zoffset);
+
+
 	void SetAngles(double vgamma, double valpha, double vphi, double vphi1, double vlambda);
 	void SetEdgeDir(int vEdgeDir);
 	EdgeDir SetMainEdgeDir(ToolType TT , DirToolType DTT);
 	void SetA_gamma(double vgamma,double vphi,double vlambda);
 	gp_Dir GetA_Gamma();
-	gp_Ax3 GetIIMainEdgeAx0(){return IIMainEdgeAx0;}//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке};//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке
-	void SetIIMainEdgeAx0(){IIMainEdgeAx0=gp_Ax3(gp_Pnt(0.,0.,0.),A_gamma,gp_Dir(cos(lambda)*cos(phi), MainEdgeDir*cos(lambda)*sin(phi), sin(lambda)));}
+	//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке
+	gp_Ax3 GetIIMainEdgeAx0();
+	void SetIIMainEdgeAx0();
+
+
+	// рассчитать углы положения пластины в инструменте и запомнить их.
+	// main_plane - основная плоскость, на которую проецируется пластина
+	// n - номер кромки
+	// t - координата на кромке, 0..1
+	void CalcCutterAngles();
+	virtual TopoDS_Shape RotatedIntoPlace() = 0;
+
+	// Расчет положения вершины пластины в инструменте
+	void CalculateTipCoordinates();
+	void CalculateMatrixOfPrincipalPlane();
+	void PlaneFromMatrixAndCoordinates();
+	virtual void ProjectContourToPlane() = 0;
+
+	// вспомогательные функции из маткада
+	virtual gp_Vec ft(int PointIndex, double ti) const = 0;
+	virtual gp_Pnt fK(int PointIndex, double ti) const = 0;
+	virtual double ftY(int iY0, int i) = 0;
+	virtual void ContourExtremities(int& iK0maxX, int& iK0maxY, int index) = 0;
+	virtual double gammaP() const = 0;
+	virtual double alphaP() const = 0;
+
+	// расчет углов
+	virtual double EffectiveReliefAngle(Standard_Integer n, Standard_Real t) const override;
+	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const override;
+	virtual gp_Pnt XExtremityPoint() const override;
+	virtual gp_Pnt YExtremityPoint() const override;
+
+	// ось инструмента. TODO класс инструмента?
+	virtual gp_Vec ToolAxis() const override;
 protected:
+	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;
 	Standard_Integer MainEdgeN;//номер режущей кромки, прининятой за главную
 	Standard_Real MainEdgeT;//Параметр, определяющий расчетную точку главной режущей кромки
+	ToolType Type;
+	DirToolType Dir;
+	double tool_diam;
+
+	// рассчитаные вещи
 	EdgeDir MainEdgeDir;//направление резания режущей кромки
 	gp_Ax3 IIMainEdgeAx0;//Орты координатного базиса, связанного с выбранной точкой на главной режущей кромке
 	gp_Dir A_gamma;//нормаль к передней поверхности зуба
+	Standard_Real plx, ply, plz; // координаты вершины
+	Standard_Real axis_rot; // угол поворота в положение в инструменте(для фрез)
+	gp_Mat Fpl0; // матрица поворота в положение в инструменте
+	gp_Mat Mp0, Ml0;
+	gp_Trsf Fpl;
+	gp_Pln PrincipalPlane;
+	std::vector<gp_Pnt> ProjectedPts;
+	gp_Pnt m_pmaxX;
+	gp_Pnt m_pmaxY;
+
+	friend class ftrot;
 };
 
-
+//
 class CIndInsTooth :public CCuttingTooth
 {
 public:
-	CIndexableIns IndIns;
-	CIndInsTooth(double vgamma, double valpha, double vphi, double vphi1, double vlambda, 
-	 ToolType TT , DirToolType DTT, CIndexableIns vIndIns)
-		//const IndInsert* h)
-		:CCuttingTooth(vgamma, valpha, vphi,  vphi1,  vlambda,  TT, DTT),
-	IndIns(vIndIns), IIAx(), FI_Edge0(), Ax_Edge0()
-	{};
-	~CIndInsTooth() { };
-	gp_Trsf GetFI_Edge0() {return FI_Edge0;};
-	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3) 
-	{	
-		//Установка СК, связанной с режущей кромкой пласттны
-		IndIns.IIAx(II_n,II_t,IIAx);
-		//Установка СК, параллельной СК пластины в инструменте
-		SetA_gamma(gamma,phi,lambda);
-		SetIIMainEdgeAx0();
-	};
+	CIndInsTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT, DirToolType DTT, CIndexableInsert* vIndIns);
+	~CIndInsTooth();
+	gp_Trsf GetFI_Edge0();
+	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3);
 
+	// вспомогательные функции из маткада
+	virtual gp_Vec ft(int PointIndex, double ti) const override;
+	virtual gp_Pnt fK(int PointIndex, double ti) const override;
+					 // Унаследовано через CCuttingTooth
+	virtual double ftY(int iY0, int i) override;
+	virtual void ContourExtremities(int& iK0maxX, int& iK0maxY, int index) override;
+	virtual void ProjectContourToPlane() override;
+	gp_Pnt K0(int index);
+	gp_Pnt K0r(int index);
+	virtual TopoDS_Shape RotatedIntoPlace() override;
+	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
+	virtual int NumPoint() const override;
+	virtual gp_Dir NormalToReferencePlane() const override;
+	virtual double gammaP() const override;
+	virtual double alphaP() const override;
+
+	CIndexableInsert* IndIns;
 protected:
+
 	Standard_Integer II_n;//номер главной режущей кромки пластины
 	Standard_Real II_t;//параметр точки режущей кромки для которой задаются параметры режущей кромки
 	gp_Ax3 Ax_Edge0;//расположение СК, связанной с началом СК, оси которой параллельны
@@ -68,50 +116,3 @@ protected:
 	gp_Trsf FI_Edge0;//Матрица, задающая преобразование координат, переводящее пластину в положение, в котором ее оси параллельна осям ССК зуба инструмета
 
 };
-
-class CRotationalTooth :public CCutTip
-{
-public:
- 	CRotationalTooth(double R, double TAng)
-		:Radius(R),ToothAng(TAng), CCutTip(gp_Ax3())
-	{
-		Standard_Real x=R*sin(TAng);
-		Standard_Real y=cos(TAng);
-	};
-	CRotationalTooth(gp_Ax3 Ax3)
-		:CCutTip(Ax3)
-	{
-	//Вычисление радиуса инструмента как расстояния от вершины инструмента до оси вращения инструмента.
-	//Ось вращения инструмента совпадает с осью Z его СК.
-		//Точка, принятая за вершину зуба
-		gp_Pnt pt=Ax3.Location();
-		Standard_Real x=pt.X();
-		Standard_Real y=pt.Y();
-		Radius=sqrt(x*x+y*y);
-		ToothAng=atan2(y,x);
-	};
-	~CRotationalTooth(){};
-protected:
-	double Radius;//радиус расположения зуба относительно оси вращения
-	double ToothAng;//угловое расположение вершины зуба
-};
-
-
-class CRotCuttingTooth : public CCuttingTooth, CRotationalTooth//Зуб вращающегося инструмента
-{
-public:
-	CRotCuttingTooth(double vgamma, double valpha, double vphi, double vphi1, double vlambda, double vR, double vTAng, ToolType TT , DirToolType DTT);
-	~CRotCuttingTooth(void);
-};
-
-/*class CIndInsCuttingTooth : public CCuttingTooth//Зуб режущего инструмента
-{
-public:
-	CIndexableIns IndIns;
-	~CIndInsCuttingTooth(void);
-	CIndInsCuttingTooth(double vgamma, double valpha, double vphi, double vphi1, double vlambda, 
-		 gp_Ax3 vIIAx,ToolType TT , DirToolType DTT, CIndexableIns vIndIns);
-protected:
-
-};
-*/

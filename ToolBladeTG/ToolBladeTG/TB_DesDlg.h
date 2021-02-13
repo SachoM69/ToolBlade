@@ -24,8 +24,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	void GetComplexStruct(IndInsert* IIt);
-	void SetComplexStruct(const IndInsert* IIt);
+	void StoreToParams(IndInsParameters* IIt);
+	void LoadFromParams(const IndInsParameters* IIt);
+
+	void StoreToolType();
+	void StoreToolDir();
 private:
 	void CollectDlgData();
 	void UnpackDlgData();
@@ -56,9 +59,13 @@ private:
 	int IIn_d;//номер в списке размеров
 	double II_Dim;//размер 
 	// Список обозначений задних углов
-	CComboBox IIRackAnglList;
-	int nRackAngle;
+	CComboBox IIReliefAnglList;
+	int nReliefAngle;
+	double II_ReliefAng;
+	// Величина переднего угла
+	CEdit RackAngleTB;
 	double II_RackAng;
+
 	wchar_t FormChar;
 	// Список обозначений класса допуска
 	CComboBox IITolClassList;
@@ -71,12 +78,12 @@ private:
 	double II_Thick;
 	int IIn_Thick;
 	CComboBox IIVertFormList;//форма вершины пластины
-	int II_VertForm;
+	VertForm II_VertForm;
 	CComboBox IIVertDimList;
 	int IIn_R;//номер радиуса в списке
 	double II_r;//величина радиуса
 	CComboBox IIDirList;//Направление резания
-	int II_Dir;
+	CutDirection II_Dir;
 	CComboBox IIDimHoleList;
 	double II_DimHole;
 	int IIn_DHole;
@@ -98,7 +105,7 @@ private:
 
 	//подготовка данных и заполнение списка IIDimList
 	void SetDimList();
-	void SetRackAnglList();
+	void SetReliefAnglList();
 	void SetTolClassList();
 	void SetKonsFeatureList();
 	void SetThicknessList();

@@ -7,6 +7,10 @@
 #include "afxdialogex.h"
 //#include "d:\SB\ToolBlade\ToolBlade\ToolBlade.h"
 
+#define deg M_PI/180
+#define RAD(x) ((x)*M_PI/180)
+#define DEG(x) ((x)*180/M_PI)
+
 //массив стандартных размеров пластин
 const double darr[] = {3.97,4.76,5.56,6.35,7.94,9.525,12.7,15.875,19.05,25.4,31.75};
 
@@ -29,6 +33,8 @@ CTB_DesDlg::CTB_DesDlg(IInstrInsList* myprov, CWnd* pParent /*=NULL*/)
 {
 	InsertProvider=myprov;
 	CurrentIndex=0;
+	Create(IDD);
+	ShowWindow(SW_SHOW);
 }
 
 CTB_DesDlg::~CTB_DesDlg()
@@ -41,7 +47,8 @@ void CTB_DesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_IGROUP, IGroupList);
 	DDX_Control(pDX, IDC_IIFORM, IIFormList);
 	DDX_Control(pDX, IDC_IIDIM, IIDimList);
-	DDX_Control(pDX, IDC_INDINSRACKANG, IIRackAnglList);
+	DDX_Control(pDX, IDC_INDINSRELIEFANG, IIReliefAnglList);
+	DDX_Control(pDX, IDC_INDINSRACKANGLE, RackAngleTB);
 	DDX_Control(pDX, IDC_INDINSKONSFEATURE, IIKonsFeatureList);
 	DDX_Control(pDX, IDC_INDINSTOLCLASS, IITolClassList);
 	DDX_Control(pDX, IDC_INDINSTHICKNESS, IIThicknessList);
@@ -90,9 +97,9 @@ BOOL CTB_DesDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	ListViewContextMenu.LoadMenuW(IDR_INSERT_LIST_EDIT);
-	IndInsert a;
-	InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-	SetComplexStruct(&a);
+	IndInsParameters a;
+	InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+	LoadFromParams(&a);
 	//for (int i=0; i<7; i++) SC[i].SetCurSel(0);
 	//SC1.SetCurSel(0)
 	UnpackDlgData();
@@ -105,13 +112,13 @@ BOOL CTB_DesDlg::OnInitDialog()
 	ImageList->Create(16, 16, TRUE, 1, 1);
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONSHOWN));
     ImageList->Add(AfxGetApp()->LoadIcon(IDI_ICONHIDDEN));
-	IndInsListView.SetImageList(ImageList, LVSIL_SMALL);
-	//TODO IndInsListView.SetExtendedStyle(LVS_EX_CHECKBOXES);
+	//IndInsListView.SetImageList(ImageList, LVSIL_SMALL);
+	IndInsListView.SetExtendedStyle(LVS_EX_CHECKBOXES);
 	UpdateInsertList();
 	ToolTypeList.SetCurSel(b.ToolType);
 	CuttingDirList.SetCurSel(b.CutDirection);
-//	int index; const CIndexableInsert* object;
-//	InsertProvider->QueryIndInsertObject(index, &object);
+//	int index; const IIndexableInsert* object;
+//	InsertProvider->QueryIndInsObject(index, &object);
 	ActiveEdgePos.SetRange(0, 100, 0);
 	return true;
 }
@@ -145,7 +152,10 @@ void CTB_DesDlg::CollectDlgData()
 	wchar_t S1=S[0];
 	II_n=0;
 	II_eps=0;
-	II_RackAng=0.;
+	II_ReliefAng=0.;
+	CString s_rack;
+	RackAngleTB.GetWindowText(s_rack);
+	II_RackAng = RAD(_wtof(s_rack));
 	switch (IGroup)
 	{
 		case 0: switch (S1)
@@ -186,8 +196,8 @@ void CTB_DesDlg::CollectDlgData()
 				}
 	}
 
-	sel = IIRackAnglList.GetCurSel();	
-	II_RackAng=RAarr[sel];//валичина заднего угла
+	sel = IIReliefAnglList.GetCurSel();	
+	II_ReliefAng=RAarr[sel];//валичина заднего угла
 
 	sel = IIKonsFeatureList.GetCurSel();
 	II_HT=sel;//Наличие и форма отверстия
@@ -199,7 +209,15 @@ void CTB_DesDlg::CollectDlgData()
 	II_Thick=THarr[sel];//Толщина
 
 	sel = IIDirList.GetCurSel();
-	II_Dir=sel; //Направление
+	switch (sel) //Направление
+	{
+	case 0:
+		II_Dir = Dir_Right;
+		break;
+	case 1:
+		II_Dir = Dir_Left;
+		break;
+	}
 
 	OnCbnSelchangeIndinsvertform();
 	if (II_VertForm==VF_SHARP)
@@ -226,8 +244,11 @@ void CTB_DesDlg::UnpackDlgData()
 	IGroupList.SetCurSel(IGroup);
 	OnCbnSelchangeIgroup();
 	IIFormList.SetCurSel(IIForm);
-	SetRackAnglList();
-	IIRackAnglList.SetCurSel(nRackAngle);
+	SetReliefAnglList();
+	IIReliefAnglList.SetCurSel(nReliefAngle);
+	CString RackText;
+	RackText.Format(_T("%f"), DEG(II_RackAng));
+	RackAngleTB.SetWindowText(RackText);
 	SetTolClassList();
 	SetKonsFeatureList();
 	IIKonsFeatureList.SetCurSel(II_HT);
@@ -244,19 +265,20 @@ void CTB_DesDlg::UnpackDlgData()
 	IIDimHoleList.SetCurSel(IIn_DHole);
 	SetActiveEdgeList();
 	ActiveEdgeList.SetCurSel(II_ActiveEdge);
-	DrawEdgePoint();
+	//DrawEdgePoint();
 }
 
-void CTB_DesDlg::GetComplexStruct(IndInsert* IIt)
+void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 {
-	IndInsert &II = *IIt;
+	IndInsParameters &II = *IIt;
 	II.IGroup=IGroup;
 	II.IIForm=IIForm;
 	II.FormChar=FormChar;
 	II.eps=II_eps;
-	II.n=II_n;
+	II.VertexCount=II_n;
 
-	II.RackAng=II_RackAng;
+	II.ReliefAng=II_ReliefAng;
+	II.RackAng = II_RackAng;
 
 	II.HT=II_HT;
 	II.Dim=II_Dim;
@@ -269,23 +291,24 @@ void CTB_DesDlg::GetComplexStruct(IndInsert* IIt)
 	II.Dir=II_Dir;//направление резания
 	II.DHole=II_DimHole;
 	II.TolClass=II_TolClass;
-	II.ActEdge=II_ActiveEdge;
+	//II.ActEdge=II_ActiveEdge;
 }
 
-void CTB_DesDlg::SetComplexStruct(const IndInsert* IIt)
+void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 {
 	IGroup=IIt->IGroup;
 	IIForm=IIt->IIForm;
 	int sel=0;
 	for (int i=0; i<(sizeof(RAarr)/sizeof(double)); i++)
 	{
-		if (RAarr[i]==IIt->RackAng) 
+		if (RAarr[i]==IIt->ReliefAng) 
 		{
 			sel=i; 
 			break;
 		}
 	}
-	nRackAngle=sel;
+	nReliefAngle=sel;
+	II_RackAng = IIt->RackAng;
 		//Толщина
 	sel=0;
 	for (int i=0; i<(sizeof(THarr)/sizeof(double)); i++)
@@ -362,10 +385,48 @@ void CTB_DesDlg::SetComplexStruct(const IndInsert* IIt)
 	IIn_R=sel;
 	II_Dir=IIt->Dir;
 	II_TolClass=IIt->TolClass;
-	II_ActiveEdge=IIt->ActEdge;
+	//II_ActiveEdge=IIt->ActEdge;
 	EdgePos_t = 0;
 	EdgePos = 0;
 
+}
+
+void CTB_DesDlg::StoreToolType()
+{
+	int sel = ToolTypeList.GetCurSel();
+	ToolType tt;
+	switch (sel)
+	{
+	case 1:
+		tt = Boring_Cutter;
+		break;
+	case 2:
+		tt = Drilling_Tool;
+		break;
+	case 3:
+		tt = Milling_Tool;
+		break;
+	default:
+		tt = Turning_Cutter;
+		break;
+	}
+	InsertProvider->UpdateToolType(tt);
+}
+
+void CTB_DesDlg::StoreToolDir()
+{
+	int sel = CuttingDirList.GetCurSel();
+	DirToolType dtt;
+	switch (sel)
+	{
+	case 1:
+		dtt = DirTool_Left;
+		break;
+	default:
+		dtt = DirTool_Right;
+		break;
+	}
+	InsertProvider->UpdateToolDirection(dtt);
 }
 
 
@@ -380,7 +441,6 @@ void CTB_DesDlg::OnCbnSelchangeIndinsform()
 
 void CTB_DesDlg::OnCbnSelchangeIgroup()
 {
-	// TODO: Add your control notification handler code here
 	//IDC_INDINSFORM
 	int i=IIFormList.GetCurSel();
 	int iG = IGroupList.GetCurSel();
@@ -539,19 +599,19 @@ void CTB_DesDlg::OnCbnSelchangeIidim()
 }
 
 
-void CTB_DesDlg::SetRackAnglList()
+void CTB_DesDlg::SetReliefAnglList()
 {
-	IIRackAnglList.ResetContent();
-	IIRackAnglList.AddString(L"A 7 3°");
-	IIRackAnglList.AddString(L"B 8 5°");
-	IIRackAnglList.AddString(L"C 2 7°");
-	IIRackAnglList.AddString(L"D 6 15°");
-	IIRackAnglList.AddString(L"E 4 20°");
-	IIRackAnglList.AddString(L"F 5 25°");
-	IIRackAnglList.AddString(L"G 9 30°");
-	IIRackAnglList.AddString(L"N 1 0°");
-	IIRackAnglList.AddString(L"P 3 11°");
-	IIRackAnglList.AddString(L"O 0 Спец.");
+	IIReliefAnglList.ResetContent();
+	IIReliefAnglList.AddString(L"A 7 3°");
+	IIReliefAnglList.AddString(L"B 8 5°");
+	IIReliefAnglList.AddString(L"C 2 7°");
+	IIReliefAnglList.AddString(L"D 6 15°");
+	IIReliefAnglList.AddString(L"E 4 20°");
+	IIReliefAnglList.AddString(L"F 5 25°");
+	IIReliefAnglList.AddString(L"G 9 30°");
+	IIReliefAnglList.AddString(L"N 1 0°");
+	IIReliefAnglList.AddString(L"P 3 11°");
+	IIReliefAnglList.AddString(L"O 0 Спец.");
 }
 
 void CTB_DesDlg::SetTolClassList()
@@ -637,8 +697,8 @@ void CTB_DesDlg::SetDirList()
 
 void CTB_DesDlg::SetActiveEdgeList()
 {
-	const CIndexableInsert* object;
-	InsertProvider->QueryIndInsertObject(CurrentIndex, &object);
+	const IIndexableInsert* object;
+	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	CString S;
 	ActiveEdgeList.ResetContent();
 	for(auto i=0; i<object->NumPoint(); i++)
@@ -651,17 +711,17 @@ void CTB_DesDlg::SetActiveEdgeList()
 
 void CTB_DesDlg::OnClose()
 {
-
 	CDialog::OnClose();
+	DestroyWindow();
 }
 
 
 void CTB_DesDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
-	InsertProvider->ShowPoint(gp_Pnt(), false);
+	//InsertProvider->ShowPoint(gp_Pnt(), 0, false);
 	delete ImageList;
-	// TODO: Add your message handler code here
+	delete this;
 }
 
 
@@ -669,10 +729,14 @@ void CTB_DesDlg::OnBnClickedOk()
 {
 	CollectDlgData();
 
-	IndInsert a;
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	StoreToolType();
+	StoreToolDir();
+
+	IndInsParameters a;
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 
 	CDialog::OnOK();
 }
@@ -724,29 +788,31 @@ void CTB_DesDlg::OnCbnSelchangeIndinsdir()
 void CTB_DesDlg::OnList_Dblclk(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	IndInsert a;
+	IndInsParameters a;
 	if(pNMItemActivate->iItem!=CurrentIndex)
 	{
 		CollectDlgData();
-		GetComplexStruct(&a);
-		InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+		StoreToParams(&a);
+		InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	}
 
 	if(pNMItemActivate->iItem!=-1)
 	{
 		CurrentIndex=pNMItemActivate->iItem;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertListSoft();
 	} else
 	{
 		int index = CurrentIndex;
 		InsertProvider->RequestNewInsert(&index);
-		InsertProvider->UpdateIndInsertInformation(index, &a);
+		InsertProvider->UpdateIndInsInformation(index, &a);
 		CurrentIndex = index;
 		UpdateInsertList();
 	}
+	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 
 	*pResult = 0;
 }
@@ -787,11 +853,11 @@ void CTB_DesDlg::OnTRBNThumbPosChangingActiveedgepos(NMHDR *pNMHDR, LRESULT *pRe
 
 void CTB_DesDlg::DrawEdgePoint()
 {
-	const CIndexableInsert* object;
-	InsertProvider->QueryIndInsertObject(CurrentIndex, &object);
+	const IIndexableInsert* object;
+	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	gp_Pnt edgept; gp_Vec V; gp_Ax3 Ax3;
 	object->IIVertex(II_ActiveEdge,EdgePos_t,edgept,V, Ax3);
-	InsertProvider->ShowPoint(edgept,true);
+	InsertProvider->ShowPoint(edgept,0,true);
 	//нарисовать стрелку из точки edgept в направлении V
 }
 
@@ -800,19 +866,23 @@ void CTB_DesDlg::OnBnClickedRefresh()
 {
 	CollectDlgData();
 
-	IndInsert a;
-	GetComplexStruct(&a);
+	IndInsParameters a;
+	StoreToParams(&a);
 	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	InsertProvider->UpdateDisplay();
 }
 
-void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR *pNMHDR, LRESULT *pResult)
+void CTB_DesDlg::OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	int index = pNMLV->iItem;
-	IndInsAttributes atrs;
-	InsertProvider->QueryIndInsertAttributes(index, &atrs);
-	atrs.IsDisabled = (pNMLV->uNewState==1);
-	InsertProvider->UpdateIndInsertAttributes(index, &atrs);
+	if (pNMLV->uNewState & LVIS_STATEIMAGEMASK && pNMLV->iItem >= 0)
+	{
+		IndInsAttributes atrs;
+		InsertProvider->QueryIndInsAttributes(index, &atrs);
+		atrs.IsDisabled = IndInsListView.GetCheck(pNMLV->iItem)==FALSE;
+		InsertProvider->UpdateIndInsAttributes(index, &atrs);
+	}
 	*pResult = 0;
 }
 
@@ -840,11 +910,12 @@ void CTB_DesDlg::UpdateInsertList(void)
 	for(auto i=0; i<b.ActualToothCount; i++)
 	{
 		IndInsAttributes c;
-		InsertProvider->QueryIndInsertAttributes(i, &c);
+		InsertProvider->QueryIndInsAttributes(i, &c);
 		CString a;
 		if(i!=CurrentIndex) a.Format(_T("%d"), i);
 		else a.Format(_T("%d (активна)"), i);
 		IndInsListView.InsertItem(i, a, c.IsDisabled);
+		IndInsListView.SetCheck(i, c.IsDisabled?FALSE:TRUE);
 	}
 }
 
@@ -857,10 +928,10 @@ void CTB_DesDlg::MenuBtnDelete()
 		if(sel<CurrentIndex) CurrentIndex--;
 		
 		int closest_index = -1;
-		IndInsert a;
+		IndInsParameters a;
 		for(int i=CurrentIndex; i>=0; i--)
 		{
-			if(InsertProvider->QueryIndInsertInformation(i, &a)==S_OK)
+			if(InsertProvider->QueryIndInsInformation(i, &a)==S_OK)
 			{
 				closest_index=i; break;
 			}
@@ -870,8 +941,8 @@ void CTB_DesDlg::MenuBtnDelete()
 			InsertProvider->RequestNewInsert(&closest_index);
 		}
 		CurrentIndex=closest_index;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertList();
 	}
@@ -879,18 +950,18 @@ void CTB_DesDlg::MenuBtnDelete()
 
 void CTB_DesDlg::MenuBtnEdit()
 {
-	IndInsert a;
+	IndInsParameters a;
 	CollectDlgData();
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	UpdateInsertListSoft();
 
 	int sel = IndInsListView.GetSelectionMark();
 	if(sel!=-1)
 	{
 		CurrentIndex=sel;
-		InsertProvider->QueryIndInsertInformation(CurrentIndex, &a);
-		SetComplexStruct(&a);
+		InsertProvider->QueryIndInsInformation(CurrentIndex, &a);
+		LoadFromParams(&a);
 		UnpackDlgData();
 		UpdateInsertListSoft();
 	}
@@ -898,14 +969,14 @@ void CTB_DesDlg::MenuBtnEdit()
 
 void CTB_DesDlg::MenuBtnNew()
 {
-	IndInsert a;
+	IndInsParameters a;
 	CollectDlgData();
-	GetComplexStruct(&a);
-	InsertProvider->UpdateIndInsertInformation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsInformation(CurrentIndex, &a);
 	
 	int index = CurrentIndex;
 	InsertProvider->RequestNewInsert(&index);
-	InsertProvider->UpdateIndInsertInformation(index, &a);
+	InsertProvider->UpdateIndInsInformation(index, &a);
 	CurrentIndex = index;
 	UpdateInsertList();
 }

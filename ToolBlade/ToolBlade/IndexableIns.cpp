@@ -3,41 +3,41 @@
 #include <math.h>
 #include "Degrees.hxx"
 
-void CIndexableIns::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
-//ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И РАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ
+void CIndexableInsert::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
+//ГЏГђГЋГ”Г€Г‹Гњ ГђГ…Г†Г“Г™Г…Г‰ ГЉГђГЋГЊГЉГ€ ГђГЂГ‚ГЌГЋГ‘Г’ГЋГђГЋГЌГЌГ€Г• Г€ ГђГЂГ‚ГЌГЋГ“ГѓГЋГ‹ГњГЌГ›Г• ГЏГ‹ГЂГ‘Г’Г€ГЌ ГЊГЌГЋГѓГЋГѓГђГЂГЌГЌГЋГ‰ Г”ГЋГђГЊГ›
 {
 	double d=IInst.Dim, r=IInst.r;
-	UINT len=(r<=0?1:3)*IInst.n+1;
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	UINT len=(r<=0?1:3)*IInst.VertexCount+1;
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	node_p.clear();
 	node_p.reserve(len);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.reserve(len);
 	d_order.clear();
-	d_order.resize((r<=0?1:2)*IInst.n);
+	d_order.resize((r<=0?1:2)*IInst.VertexCount);
 
 	curves.clear();
 	
 	//TColgp_Array1OfPnt& p1=**ptarr;
 	double eps2, psi, b, l, R, m;
-	eps2=pi*(IInst.n-2)/(IInst.n*2);
-	psi=2*pi/IInst.n;
+	eps2=pi*(IInst.VertexCount-2)/(IInst.VertexCount*2);
+	psi=2*pi/IInst.VertexCount;
 	b=r/sin(eps2);
 	l=d/tan(eps2);weight.push_back(1.);
 	R=l/(2*cos(eps2));
 	double wv=sin(eps2);
 
-	m=R-b+r+(IInst.n/2-floor(double(IInst.n/2))>0)?(d/2):-(d/2);
+	m=R-b+r+(IInst.VertexCount/2-floor(double(IInst.VertexCount/2))>0)?(d/2):-(d/2);
 	
-	if (r<=0) //пластина с острыми вершинами
+	if (r<=0) //ГЇГ«Г Г±ГІГЁГ­Г  Г± Г®Г±ГІГ°Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 	{
 		node_p.push_back(gp_Pnt(0,R,0));
 		weight.push_back(1);
 		d_order[0]=1;
 	}
-	else //пластина с округленными вершинами
+	else //ГЇГ«Г Г±ГІГЁГ­Г  Г± Г®ГЄГ°ГіГЈГ«ГҐГ­Г­Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 	{
 		double y=R-b+r*sin(eps2);
 		node_p.push_back(gp_Pnt(r*cos(eps2),y,0));
@@ -49,16 +49,16 @@ void CIndexableIns::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
 		d_order[0]=2;
 		d_order[1]=1;
 	}
-	for (int i=1; i<IInst.n; i++)
+	for (int i=1; i<IInst.VertexCount; i++)
 	{
 		double psi_i=psi*i;
-	if (r<=0) //пластина с острыми вершинами
+	if (r<=0) //ГЇГ«Г Г±ГІГЁГ­Г  Г± Г®Г±ГІГ°Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 			{
 				node_p.push_back(node_p[0].Rotated(gp::OZ(), psi_i));
 				weight.push_back(1.);
 				d_order[i]=1;
 			}
-		else //пластина с округленными вершинами
+		else //ГЇГ«Г Г±ГІГЁГ­Г  Г± Г®ГЄГ°ГіГЈГ«ГҐГ­Г­Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 			{
 				node_p.push_back(node_p[0].Rotated(gp::OZ(), psi_i));
 				node_p.push_back(node_p[1].Rotated(gp::OZ(), psi_i));
@@ -73,15 +73,15 @@ void CIndexableIns::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** darr)
 	node_p.push_back(node_p[0]);
 	weight.push_back(1);
 }
-void CIndexableIns::rrrm()
+void CIndexableInsert::rrrm()
 {
 	double d=IInst.Dim;
 	UINT len=8;
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	node_p.clear();
 	node_p.reserve(len);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.reserve(len);
 
@@ -108,19 +108,19 @@ void CIndexableIns::rrrm()
 	weight.push_back(1);
 }
 
-void CIndexableIns::rtrm()//, void** w, void** darr)
-//ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ с округленными вершинами
+void CIndexableInsert::rtrm()//, void** w, void** darr)
+//ГЏГђГЋГ”Г€Г‹Гњ ГђГ…Г†Г“Г™Г…Г‰ ГЉГђГЋГЊГЉГ€ ГђГЂГ‚ГЌГЋГ‘Г’ГЋГђГЋГЌГЌГ€Г• Г€ ГЌГ…ГђГЂГ‚ГЌГЋГ“ГѓГЋГ‹ГњГЌГ›Г• ГЏГ‹ГЂГ‘Г’Г€ГЌ ГЊГЌГЋГѓГЋГѓГђГЂГЌГЌГЋГ‰ Г”ГЋГђГЊГ› Г± Г®ГЄГ°ГіГЈГ«ГҐГ­Г­Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 {
 	double d=IInst.Dim, r=IInst.r;
 	double r1=r;
-	int n=IInst.n;
+	int n=IInst.VertexCount;
 	UINT len=7*n;
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	node_p.clear();
 	node_p.reserve(len);
 	node_p.resize(6);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.reserve(len);
 
@@ -183,19 +183,19 @@ void CIndexableIns::rtrm()//, void** w, void** darr)
 	weight.push_back(1.);
 }
 
-void CIndexableIns::rtrm_sh()//, void** w, void** darr)
-//ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ с острыми вершинами
+void CIndexableInsert::rtrm_sh()//, void** w, void** darr)
+//ГЏГђГЋГ”Г€Г‹Гњ ГђГ…Г†Г“Г™Г…Г‰ ГЉГђГЋГЊГЉГ€ ГђГЂГ‚ГЌГЋГ‘Г’ГЋГђГЋГЌГЌГ€Г• Г€ ГЌГ…ГђГЂГ‚ГЌГЋГ“ГѓГЋГ‹ГњГЌГ›Г• ГЏГ‹ГЂГ‘Г’Г€ГЌ ГЊГЌГЋГѓГЋГѓГђГЂГЌГЌГЋГ‰ Г”ГЋГђГЊГ› Г± Г®Г±ГІГ°Г»Г¬ГЁ ГўГҐГ°ГёГЁГ­Г Г¬ГЁ
 {
 	double d=IInst.Dim, r=IInst.r;
 	double r1=r;
-	int n=IInst.n;
+	int n=IInst.VertexCount;
 	UINT len=2*n+1;
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	node_p.clear();
 	node_p.reserve(len);
 	node_p.resize(2);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.reserve(len);
 	d_order.clear();
@@ -239,19 +239,19 @@ void CIndexableIns::rtrm_sh()//, void** w, void** darr)
 }
 
 void CIndexableIns::rtrm_chamfer()
-//ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ с фаской
+//ГЏГђГЋГ”Г€Г‹Гњ ГђГ…Г†Г“Г™Г…Г‰ ГЉГђГЋГЊГЉГ€ ГђГЂГ‚ГЌГЋГ‘Г’ГЋГђГЋГЌГЌГ€Г• Г€ ГЌГ…ГђГЂГ‚ГЌГЋГ“ГѓГЋГ‹ГњГЌГ›Г• ГЏГ‹ГЂГ‘Г’Г€ГЌ ГЊГЌГЋГѓГЋГѓГђГЂГЌГЌГЋГ‰ Г”ГЋГђГЊГ› Г± ГґГ Г±ГЄГ®Г©
 {
 	double d = IInst.Dim, r = IInst.r;
 	double r1 = r;
 	int n = IInst.n;
 	int pts_per_edge = 2;
 	UINT len = pts_per_edge * n + 1;
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	std::vector<gp_Pnt> control_pts;
 	control_pts.reserve(len);
 	control_pts.resize(pts_per_edge);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.reserve(len);
 	d_order.clear();
@@ -301,7 +301,7 @@ void CIndexableIns::rtrm_chamfer()
 }
 
 void CIndexableIns::nn()//, void** w, void** darr)
-//ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ НЕРАВНОСТОРОННИХ И НЕРАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ
+//ГЏГђГЋГ”Г€Г‹Гњ ГђГ…Г†Г“Г™Г…Г‰ ГЉГђГЋГЊГЉГ€ ГЌГ…ГђГЂГ‚ГЌГЋГ‘Г’ГЋГђГЋГЌГЌГ€Г• Г€ ГЌГ…ГђГЂГ‚ГЌГЋГ“ГѓГЋГ‹ГњГЌГ›Г• ГЏГ‹ГЂГ‘Г’Г€ГЌ ГЊГЌГЋГѓГЋГѓГђГЂГЌГЌГЋГ‰ Г”ГЋГђГЊГ›
 {
 	double seps=sin(IInst.eps), ceps=cos(IInst.eps);
 	double seps2=sin(IInst.eps/2);
@@ -311,13 +311,13 @@ void CIndexableIns::nn()//, void** w, void** darr)
 	double psi=acos((l*l-b*b)/(D*d));
 	double eps2=0.5*IInst.eps;
 	double y0=0.5*D-IInst.r*0.5*(D-d*sin(0.5*pi-psi))/(b*tan(eps2));
-	//очистка и подготовка массивов
-	//массив контрольных точек кривой
+	//Г®Г·ГЁГ±ГІГЄГ  ГЁ ГЇГ®Г¤ГЈГ®ГІГ®ГўГЄГ  Г¬Г Г±Г±ГЁГўГ®Гў
+	//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 	int len=9;
 	node_p.clear();
 	//node_p.reserve(len);
 	node_p.resize(len);
-	//массивы весов и порядков
+	//Г¬Г Г±Г±ГЁГўГ» ГўГҐГ±Г®Гў ГЁ ГЇГ®Г°ГїГ¤ГЄГ®Гў
 	weight.clear();
 	weight.resize(len);
 	d_order.clear();
@@ -374,23 +374,23 @@ void CIndexableIns::nn()//, void** w, void** darr)
 		VertForm=&rep[i++]; VertForm=VertForm+rep[i++];
 		Spec=rep+i;
 	} else {
-		throw Standard_NullObject("Хреновый аргумент поставлен в качестве строки представления всех параметров");
+		throw Standard_NullObject("Г•Г°ГҐГ­Г®ГўГ»Г© Г Г°ГЈГіГ¬ГҐГ­ГІ ГЇГ®Г±ГІГ ГўГ«ГҐГ­ Гў ГЄГ Г·ГҐГ±ГІГўГҐ Г±ГІГ°Г®ГЄГЁ ГЇГ°ГҐГ¤Г±ГІГ ГўГ«ГҐГ­ГЁГї ГўГ±ГҐГµ ГЇГ Г°Г Г¬ГҐГІГ°Г®Гў");
 	}
 }*/
 
-CIndexableIns::CIndexableIns(const IndInsert* IIt)
+CIndexableInsert::CIndexableInsert(const IndInsParameters* IIt)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
-	if(IIt) // конструктор CIndInsCuttingTooth
+	if(IIt) // ГЄГ®Г­Г±ГІГ°ГіГЄГІГ®Г° CIndInsCuttingTooth
 		IInst=*IIt;
-	else memset(&IInst, 0, sizeof(IInst)); // TODO устанавливать каждое поле
+	else memset(&IInst, 0, sizeof(IInst)); // TODO ГіГ±ГІГ Г­Г ГўГ«ГЁГўГ ГІГј ГЄГ Г¦Г¤Г®ГҐ ГЇГ®Г«ГҐ
 }
 
-CIndexableIns::~CIndexableIns(void)
+CIndexableInsert::~CIndexableInsert(void)
 {
 }
 
-CIndexableIns::CIndexableIns(const CIndexableIns& src)
+CIndexableInsert::CIndexableInsert(const CIndexableInsert& src)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
 	IInst=src.IInst;
@@ -401,17 +401,17 @@ CIndexableIns::CIndexableIns(const CIndexableIns& src)
 	for each(auto& p in src.curves)
 	{
 		auto b = p->Copy();
-		curves.push_back(*(Handle_Geom_BezierCurve*)&b); // Если упадет, то надо чуть переправить
+		curves.push_back(*(Handle_Geom_BezierCurve*)&b); // Г…Г±Г«ГЁ ГіГЇГ Г¤ГҐГІ, ГІГ® Г­Г Г¤Г® Г·ГіГІГј ГЇГҐГ°ГҐГЇГ°Г ГўГЁГІГј
 	}
 }
 
-CIndexableIns::CIndexableIns(CIndexableIns&& src)
+CIndexableInsert::CIndexableInsert(CIndexableInsert&& src)
 //:CPart(gp_Ax3( gp_Pnt(0.,0.,0),gp_Dir(0.,0.,1.),gp_Dir(1.,0.,0.)))
 {
 	swap(src);
 }
 
-void CIndexableIns::swap(CIndexableIns& src)
+void CIndexableInsert::swap(CIndexableInsert& src)
 {
 	auto b=IInst;
 	IInst=src.IInst;
@@ -438,22 +438,22 @@ void CIndexableIns::swap(CIndexableIns& src)
 		VertForm=&rep[i++]; VertForm=VertForm+rep[i++];
 		Spec=rep+i;
 	} else {
-		throw Standard_NullObject("Хреновый аргумент поставлен в качестве строки представления всех параметров");
+		throw Standard_NullObject("Г•Г°ГҐГ­Г®ГўГ»Г© Г Г°ГЈГіГ¬ГҐГ­ГІ ГЇГ®Г±ГІГ ГўГ«ГҐГ­ Гў ГЄГ Г·ГҐГ±ГІГўГҐ Г±ГІГ°Г®ГЄГЁ ГЇГ°ГҐГ¤Г±ГІГ ГўГ«ГҐГ­ГЁГї ГўГ±ГҐГµ ГЇГ Г°Г Г¬ГҐГІГ°Г®Гў");
 	}
 }*/
 
-//Создает форму лезвия инструмента
-/*TopoDS_Shape CIndexableIns::ConstructToolBlade()//число вершин
+//Г‘Г®Г§Г¤Г ГҐГІ ГґГ®Г°Г¬Гі Г«ГҐГ§ГўГЁГї ГЁГ­Г±ГІГ°ГіГ¬ГҐГ­ГІГ 
+/*TopoDS_Shape CIndexableIns::ConstructToolBlade()//Г·ГЁГ±Г«Г® ГўГҐГ°ГёГЁГ­
 {
-throw Standard_NoSuchObject("Вызван абстрактный метод рисования пластины");
+throw Standard_NoSuchObject("Г‚Г»Г§ГўГ Г­ Г ГЎГ±ГІГ°Г ГЄГІГ­Г»Г© Г¬ГҐГІГ®Г¤ Г°ГЁГ±Г®ГўГ Г­ГЁГї ГЇГ«Г Г±ГІГЁГ­Г»");
 	
 }*/
 
-//массив стандартных размеров пластин
+//Г¬Г Г±Г±ГЁГў Г±ГІГ Г­Г¤Г Г°ГІГ­Г»Гµ Г°Г Г§Г¬ГҐГ°Г®Гў ГЇГ«Г Г±ГІГЁГ­
 /*const double darr[] = {3.97,4.76,5.56,6.35,7.94,9.525,12.7,15.875,19.05,25.4,31.75};
 void CIndexableIns::ReadRealVals(void)
 {
-	if(!filled)  throw Standard_NoSuchObject("Отсутствуют сурсы для обнаружения реального значения");
+	if(!filled)  throw Standard_NoSuchObject("ГЋГІГ±ГіГІГ±ГІГўГіГѕГІ Г±ГіГ°Г±Г» Г¤Г«Гї Г®ГЎГ­Г Г°ГіГ¦ГҐГ­ГЁГї Г°ГҐГ Г«ГјГ­Г®ГЈГ® Г§Г­Г Г·ГҐГ­ГЁГї");
 	
 	int degrees_eps;
 	switch(Group)
@@ -521,12 +521,13 @@ CIndexableInsESEA::~CIndexableInsESEA(void)
 {
 }*/
 
-TopoDS_Shape CIndexableIns::ConstructToolBlade()
+TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 {
+	npmain.clear();
 	switch(IInst.IGroup)
 	{
 	case 0:
-		if (IInst.n==0) rrrm();
+		if (IInst.VertexCount==0) rrrm();
 		else rrm();
 		break;
 	case 1:
@@ -555,10 +556,10 @@ TopoDS_Shape CIndexableIns::ConstructToolBlade()
 		IInst.r=1.;
 		switch (IInst.FormChar)
 		{
-			case 'A': IInst.eps=85.*deg; break;
-			case 'B': IInst.eps=82.*deg; break;
-			case 'K': IInst.eps=55.*deg; break;
-			case 'F': IInst.eps=84.*deg; break;
+			case 'A': IInst.eps=DEG(85.); break;
+			case 'B': IInst.eps=DEG(82.); break;
+			case 'K': IInst.eps=DEG(55.); break;
+			case 'F': IInst.eps=DEG(84.); break;
 		}
 		nn();
 		break;
@@ -571,26 +572,26 @@ TopoDS_Shape CIndexableIns::ConstructToolBlade()
 	int j=0;
 	for (uint i=0; i<=d_order.size()-1; i++)
 	{
-		//порядок кривой
+		//ГЇГ®Г°ГїГ¤Г®ГЄ ГЄГ°ГЁГўГ®Г©
 		int di=d_order[i];
-		//массив контрольных точек кривой
+		//Г¬Г Г±Г±ГЁГў ГЄГ®Г­ГІГ°Г®Г«ГјГ­Г»Гµ ГІГ®Г·ГҐГЄ ГЄГ°ГЁГўГ®Г©
 		TColgp_Array1OfPnt CPs(1, di+1);
-		//массив весов точек
+		//Г¬Г Г±Г±ГЁГў ГўГҐГ±Г®Гў ГІГ®Г·ГҐГЄ
 		TColStd_Array1OfReal wi(1, di+1);
 
-		//создание массивов точек и весов для сегментов кривых
+		//Г±Г®Г§Г¤Г Г­ГЁГҐ Г¬Г Г±Г±ГЁГўГ®Гў ГІГ®Г·ГҐГЄ ГЁ ГўГҐГ±Г®Гў Г¤Г«Гї Г±ГҐГЈГ¬ГҐГ­ГІГ®Гў ГЄГ°ГЁГўГ»Гµ
 		for (int ii=0; ii<=(di); ii++)
 		{
 			CPs(ii+1)=node_p[j+ii];
 			wi(ii+1)=weight[j+ii];
 		}
-		//создание кривых
+		//Г±Г®Г§Г¤Г Г­ГЁГҐ ГЄГ°ГЁГўГ»Гµ
 		Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CPs,wi);
 		TopoDS_Edge aEdge = BRepBuilderAPI_MakeEdge(curve);
 		aW = BRepBuilderAPI_MakeWire(aW, aEdge);
 		curves.push_back(curve);
 
-		//заполнение массива номеров узловых точек, принадлежащих контуру
+		//Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ Г¬Г Г±Г±ГЁГўГ  Г­Г®Г¬ГҐГ°Г®Гў ГіГ§Г«Г®ГўГ»Гµ ГІГ®Г·ГҐГЄ, ГЇГ°ГЁГ­Г Г¤Г«ГҐГ¦Г Г№ГЁГµ ГЄГ®Г­ГІГіГ°Гі
 		npmain.push_back(j);
 
 		j+=di;
@@ -605,35 +606,34 @@ TopoDS_Shape CIndexableIns::ConstructToolBlade()
  		TopoDS_Shape CB = BRepPrimAPI_MakeCylinder (IInst.DHole, IInst.Thick); 
 		ToolBlade = BRepAlgoAPI_Cut(ToolBlade,CB); 
 	}
-	//Конец создания тела пластины
+	//ГЉГ®Г­ГҐГ¶ Г±Г®Г§Г¤Г Г­ГЁГї ГІГҐГ«Г  ГЇГ«Г Г±ГІГЁГ­Г»
 	return ToolBlade;
 }
 
 
-int CIndexableIns::NumPoint() const
+int CIndexableInsert::NumPoint() const
 {
 	return int(npmain.size());
 }
 
-void CIndexableIns::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
+void CIndexableInsert::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const//ГЉГ®Г®Г°Г¤ГЁГ­Г ГІГ» ГІГ®Г·ГЄГЁ, Г«ГҐГ¦Г Г№ГҐГ© Г­Г  ГЄГ®Г­ГІГіГ°ГҐ ГЇГ«Г Г±ГІГЁГ­Г», n- Г­Г®Г¬ГҐГ° ГІГ®Г·ГЄГЁ Гў Г¬Г Г±Г±ГЁГўГҐ ГіГ§Г«Г®ГўГ»Гµ ГІГ®Г·ГҐГЄ node_p
 {
-	//Координаты расчетной точки и касательная к режущей кромке
+	//ГЉГ®Г®Г°Г¤ГЁГ­Г ГІГ» Г°Г Г±Г·ГҐГІГ­Г®Г© ГІГ®Г·ГЄГЁ ГЁ ГЄГ Г±Г ГІГҐГ«ГјГ­Г Гї ГЄ Г°ГҐГ¦ГіГ№ГҐГ© ГЄГ°Г®Г¬ГЄГҐ
 	curves[n]->D1(t,P,V);
 	gp_Dir N(0.,0.,1.);
-	//Орты координатного базиса, связанного с выбранной точкой на контуре режущих кромок пластины
+	//ГЋГ°ГІГ» ГЄГ®Г®Г°Г¤ГЁГ­Г ГІГ­Г®ГЈГ® ГЎГ Г§ГЁГ±Г , Г±ГўГїГ§Г Г­Г­Г®ГЈГ® Г± ГўГ»ГЎГ°Г Г­Г­Г®Г© ГІГ®Г·ГЄГ®Г© Г­Г  ГЄГ®Г­ГІГіГ°ГҐ Г°ГҐГ¦ГіГ№ГЁГµ ГЄГ°Г®Г¬Г®ГЄ ГЇГ«Г Г±ГІГЁГ­Г»
 	Ax3=gp_Ax3(P,N,V);
 }
 
-void CIndexableIns::IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3)//Координаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
+void CIndexableInsert::IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3) const//ГЉГ®Г®Г°Г¤ГЁГ­Г ГІГ» ГІГ®Г·ГЄГЁ, Г«ГҐГ¦Г Г№ГҐГ© Г­Г  ГЄГ®Г­ГІГіГ°ГҐ ГЇГ«Г Г±ГІГЁГ­Г», n- Г­Г®Г¬ГҐГ° ГІГ®Г·ГЄГЁ Гў Г¬Г Г±Г±ГЁГўГҐ ГіГ§Г«Г®ГўГ»Гµ ГІГ®Г·ГҐГЄ node_p
 {
 
 	gp_Pnt P; 
 	gp_Vec V;
-	//Координаты расчетной точки и касательная к режущей кромке
+	//ГЉГ®Г®Г°Г¤ГЁГ­Г ГІГ» Г°Г Г±Г·ГҐГІГ­Г®Г© ГІГ®Г·ГЄГЁ ГЁ ГЄГ Г±Г ГІГҐГ«ГјГ­Г Гї ГЄ Г°ГҐГ¦ГіГ№ГҐГ© ГЄГ°Г®Г¬ГЄГҐ
 	curves[n]->D1(t,P,V);
 	gp_Dir N(0.,0.,1.);
-	//Орты координатного базиса, связанного с выбранной точкой на контуре режущих кромок пластины
+	//ГЋГ°ГІГ» ГЄГ®Г®Г°Г¤ГЁГ­Г ГІГ­Г®ГЈГ® ГЎГ Г§ГЁГ±Г , Г±ГўГїГ§Г Г­Г­Г®ГЈГ® Г± ГўГ»ГЎГ°Г Г­Г­Г®Г© ГІГ®Г·ГЄГ®Г© Г­Г  ГЄГ®Г­ГІГіГ°ГҐ Г°ГҐГ¦ГіГ№ГЁГµ ГЄГ°Г®Г¬Г®ГЄ ГЇГ«Г Г±ГІГЁГ­Г»
 	Ax3=gp_Ax3(P,N,V);
 }
-
 

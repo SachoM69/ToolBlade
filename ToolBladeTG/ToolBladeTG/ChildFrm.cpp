@@ -32,7 +32,6 @@ END_MESSAGE_MAP()
 
 CChildFrame::CChildFrame()
 {
-	// TODO: добавьте код инициализации члена
 }
 
 CChildFrame::~CChildFrame()
@@ -42,7 +41,6 @@ CChildFrame::~CChildFrame()
 
 BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO:  измените класс Window или стили посредством изменения CREATESTRUCT cs
 	if( !CMDIChildWndEx::PreCreateWindow(cs) )
 		return FALSE;
 

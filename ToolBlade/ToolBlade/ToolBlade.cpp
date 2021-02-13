@@ -6,70 +6,76 @@
 #include <math.h>
 #include "Degrees.hxx"
 #include "IndexableIns.h"
+#include "CuttingTooth.h"
 //#include "IndexableIns.cpp"
+Handle_AIS_Shape DisplayedShape;
+Handle_AIS_InteractiveContext thisAISC;
+IIndexableInsert* DisplayedInsert;
 
-Handle_AIS_Shape CuttingPlate;
-//јбсолютно бесполезна. Ќе использовать.
-__declspec(dllexport) void SetWndHandle(HWND hWnd)
+__declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters* IIt)
 {
-	//Handle_WNT_Window BlWnd;
-	//BlWnd=Handle_WNT_Window();
-	//Handle_WNT_WClass TPaint = Handle_WNT_WClass();
-	//WNT_Window ImgBl=WNT_Window(Handle_WNT_GraphicDevice(BlWnd->GraphicDevice()), "title", TPaint);
-	/*//V3d_Viewer* UV=new V3d_Viewer(*(new Handle_Aspect_GraphicDevice()), Standard_ExtString("TViewer"), "", 1000., V3d_XposYposZpos, Quantity_NOC_NAVYBLUE, V3d_ZBUFFER, V3d_COLOR, V3d_ASAP, (Standard_Boolean)1, (Standard_Boolean)1, V3d_TEX_ALL);
-	Handle(V3d_Viewer) *ViewerFTWnd = new Handle_V3d_Viewer();
-	V3d_View* ViewFTWnd;// = new V3d_View(*ViewerFTWnd, V3d_PERSPECTIVE);
-	Handle_Graphic3d_WNTGraphicDevice Painter;
-	//Handle_WNT_GraphicDevice& Painter = Handle_WNT_GraphicDevice(&PrePainter);
-	Handle_WNT_Window* ImgBladeInThere = new Handle_WNT_Window();
-	WNT_Window ImgBl=WNT_Window(Painter, "title", TPaint);
-	ImgBladeInThere = new Handle_WNT_Window(&ImgBl);
-	(*Painter, 
-		Standard_CString("Blade Window"),  
-		*TPaint);
-	ImgBladeInThere;*/
+	CIndexableInsert* PrefdIndIns = new CIndexableInsert(IIt);
+	PrefdIndIns->ConstructToolBlade();
+	return dynamic_cast<IIndexableInsert*>(PrefdIndIns);
 }
 
-//ƒобавл€ет формы режущей пластины в контекст
-/*	__declspec(dllexport) void InsertShape(Handle_AIS_InteractiveContext AISC, Standard_CString AllToolData, Standard_Boolean Reconstruct)
+//ƒобавл€ет формы режущей пластины в контекст с данными, передаваемыми через запись
+__declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_InteractiveContext AISC, const IndInsParameters* IIt)
 {
-	if(AISC->DisplayStatus(CuttingPlate)==AIS_DS_Displayed) AISC->Erase(CuttingPlate);
-	if (Reconstruct) 
-	{
-		AISC->SetDisplayMode(AIS_Shaded);
-		CIndexableIns* PrefdIndIns = new CIndexableIns(AllToolData);
-		PrefdIndIns->ReadRealVals();
-		CuttingPlate = new AIS_Shape(PrefdIndIns->ConstructToolBlade());
-		delete PrefdIndIns;
-	}
-	AISC->Display(CuttingPlate, true);
-}*/
+	IIndexableInsert* iii = CreateInsert(IIt);
+	if(AISC->DisplayStatus(DisplayedShape)==AIS_DS_Displayed) AISC->Erase(DisplayedShape, false);
+	DisplayedShape = new AIS_Shape(iii->ConstructToolBlade());
+	AISC->SetDisplayMode(AIS_Shaded, false);
+	AISC->Display(DisplayedShape, false);
+	thisAISC = AISC;
+	return iii;
+}
 
-/*__declspec(dllexport) Handle_AIS_Shape ConstructShape(Standard_CString AllToolData, Standard_Boolean Reconstruct)
+__declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert* II, const IndInsOrientation* IIo)
 {
-	if (Reconstruct)
-	{
-		CIndexableIns* PrefdIndIns = new CIndexableIns(AllToolData);
-		PrefdIndIns->ReadRealVals();
-		CuttingPlate = new AIS_Shape(PrefdIndIns->ConstructToolBlade());
-		delete PrefdIndIns;
-	}
-	return CuttingPlate;
-}*/
+	CIndexableInsert* PrefdIndIns = dynamic_cast<CIndexableInsert*>(II);
+	//CIndInsTooth* mi = new CIndInsTooth(DEG(20), DEG(40), DEG(0), IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
+	CIndInsTooth* mi = new CIndInsTooth(IIo->Gamma, IIo->Phi, IIo->Lambda, IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
+	mi->SetTipParameters(IIo->EdgeIndex, IIo->EdgePosition, IIo->AxisRotation, IIo->Zoffset);
+	mi->CalcCutterAngles();
+	return mi;
+}
 
 //ƒобавл€ет формы режущей пластины в контекст с данными, передаваемыми через запись
-	__declspec(dllexport) CIndexableInsert* InsertShape(Handle_AIS_InteractiveContext AISC, const IndInsert* IIt, Standard_Boolean Reconstruct)
+__declspec(dllexport) IIndexableInsertSeated* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* II, const IndInsOrientation* IIo)
 {
-	if(Reconstruct && AISC->DisplayStatus(CuttingPlate)==AIS_DS_Displayed) AISC->Erase(CuttingPlate, true);
-	CIndexableIns* PrefdIndIns = new CIndexableIns(IIt);
-	if (Reconstruct) 
+	if (AISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) AISC->Erase(DisplayedShape, false);
+	CIndInsTooth* mi = dynamic_cast<CIndInsTooth*>(OrientInsert(II, IIo));
+	DisplayedShape = new AIS_Shape(mi->RotatedIntoPlace());
+	AISC->SetDisplayMode(AIS_Shaded, false);
+	AISC->Display(DisplayedShape, false);
+	thisAISC = AISC;
+	return mi;
+}
+
+
+__declspec(dllexport) void DestroyInsert(const IIndexableInsert* II)
+{
+	const CIndexableInsert* PrefdIndIns = dynamic_cast<const CIndexableInsert*>(II);
+	if (DisplayedInsert == II)
 	{
-		CuttingPlate = new AIS_Shape(PrefdIndIns->ConstructToolBlade());
-		AISC->SetDisplayMode(AIS_Shaded, true);
-		AISC->Display(CuttingPlate, true);
-	} else
-	{
-		PrefdIndIns->ConstructToolBlade();
+		if (!thisAISC.IsNull() && thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
+		thisAISC.Nullify();
+		DisplayedShape.Nullify();
+		DisplayedInsert = nullptr;
 	}
-	return PrefdIndIns;
+	delete PrefdIndIns;
+}
+
+__declspec(dllexport) void DestroyInsert(const IIndexableInsertSeated* IIo)
+{
+	const CIndInsTooth* PrefdIndIns = dynamic_cast<const CIndInsTooth*>(IIo);
+	if (DisplayedInsert == PrefdIndIns->IndIns)
+	{
+		if (!thisAISC.IsNull() && thisAISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) thisAISC->Erase(DisplayedShape, true);
+		thisAISC.Nullify();
+		DisplayedShape.Nullify();
+		DisplayedInsert = nullptr;
+	}
+	delete PrefdIndIns;
 }

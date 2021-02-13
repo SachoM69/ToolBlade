@@ -22,7 +22,7 @@
     <ProjectGuid>{F1B87779-03B9-4EDF-A0E4-9222C0B278B5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ToolBlade</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -112,7 +112,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>TKernel.lib;TKGeomBase.lib;TKTopAlgo.lib;TKOffset.lib;TKBool.lib;TKPrim.lib;TKFillet.lib;TKMath.lib;TKService.lib;TKV3d.lib;TKBrep.lib;TKIGES.lib;TKSTL.lib;TKVRML.lib;TKSTEP.lib;TKG3d.lib;TKG2d.lib;TKXSBase.lib;TKShHealing.lib;TKBO.lib</AdditionalDependencies>
+      <AdditionalDependencies>TKernel.lib;TKGeomBase.lib;TKGeomAlgo.lib;TKTopAlgo.lib;TKOffset.lib;TKBool.lib;TKPrim.lib;TKFillet.lib;TKMath.lib;TKService.lib;TKV3d.lib;TKBrep.lib;TKIGES.lib;TKSTL.lib;TKVRML.lib;TKSTEP.lib;TKG3d.lib;TKG2d.lib;TKXSBase.lib;TKShHealing.lib;TKBO.lib</AdditionalDependencies>
       <OutputFile>$(SolutionDir)..\BuildOutput\$(Configuration)\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>

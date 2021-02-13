@@ -22,7 +22,7 @@
     <ProjectGuid>{8A4E6F2E-7D9A-45A0-92E3-0153C1B318C8}</ProjectGuid>
     <RootNamespace>ToolBladeTG</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -213,6 +213,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="CTB_OriDlg.h" />
     <ClInclude Include="DocBase.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="OutputWnd.h" />
@@ -230,6 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="CTB_OriDlg.cpp" />
     <ClCompile Include="DocBase.cpp" />
     <ClCompile Include="ISession_Direction.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -250,6 +252,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ToolBladeTG.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\bitmap1.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
