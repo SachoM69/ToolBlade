@@ -17,6 +17,8 @@ IMPLEMENT_DYNAMIC(CTB_OriDlg, CDialogEx)
 
 CTB_OriDlg::CTB_OriDlg(IInstrInsList* myprov, CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_ORIENTATION_DLG, pParent)
+	, ShowReliefGraph(FALSE)
+	, ShowReliefKinematicGraph(FALSE)
 {
 	InsertProvider = myprov;
 	CurrentIndex = 0;
@@ -35,8 +37,7 @@ BOOL CTB_OriDlg::OnInitDialog()
 	InsertProvider->QueryIndInsOrientation(CurrentIndex, &ori);
 	LoadFromParams(&ori);
 	LoadKinematicParams(0.5, 0, 100, 30);
-	DrawEdgePoint();
-	InsertProvider->RefreshCutter(CurrentIndex, &ori);
+	UpdateDisplayDefault(&ori);
 
 	ImageList = new CImageList();
 	ImageList->Create(16, 16, TRUE, 1, 1);
@@ -71,6 +72,10 @@ void CTB_OriDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SCALE, ScaleTB);
 	DDX_Control(pDX, IDC_AXISROT, AxisRotTB);
 	DDX_Control(pDX, IDC_ZOFFSET, ZOffsetTB);
+	DDX_Check(pDX, IDC_DISPLAYRELIEFANGLESCHECK, ShowReliefGraph);
+	DDX_Check(pDX, IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, ShowReliefKinematicGraph);
+	DDX_Control(pDX, IDC_DISPLAYRELIEFANGLESCHECK, ShowReliefGraphCheck);
+	DDX_Control(pDX, IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, ShowReliefKinematicGraphCheck);
 }
 
 
@@ -93,6 +98,8 @@ BEGIN_MESSAGE_MAP(CTB_OriDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_AXISROT, &CTB_OriDlg::OnEnChangeAxisrot)
 	ON_EN_CHANGE(IDC_ZOFFSET, &CTB_OriDlg::OnEnChangeZoffset)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_IILIST, &CTB_OriDlg::OnLvnItemchangedIilist)
+	ON_BN_CLICKED(IDC_DISPLAYRELIEFANGLESCHECK, &CTB_OriDlg::OnBnClickedDisplayreliefanglescheck)
+	ON_BN_CLICKED(IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, &CTB_OriDlg::OnBnClickedDisplaykinematicreliefanglescheck)
 END_MESSAGE_MAP()
 
 
@@ -161,15 +168,6 @@ void CTB_OriDlg::DrawEdgePoint()
 	IndInsOrientation a;
 	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
 	
-	/*for (a.EdgePosition = 0.53; a.EdgePosition <= 0.55; a.EdgePosition += 0.01)
-	{
-		InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
-		InsertProvider->RefreshCutter(CurrentIndex, &a);
-		const IIndexableInsertSeated* object;
-		InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &object);
-		object->IIVertex(PointCB.GetCurSel(), a.EdgePosition, edgept, V, Ax3);
-		x_pnt.push_back(object->XExtremityPoint());
-	}*/
 	object->IIVertex(PointCB.GetCurSel(), pos, edgept, V, Ax3);
 	InsertProvider->ShowPoint(edgept, 0, true);
 	//InsertProvider->ShowPoint(object->XExtremityPoint(), 1, true);
@@ -240,8 +238,7 @@ void CTB_OriDlg::OnNMDblclkIilist(NMHDR* pNMHDR, LRESULT* pResult)
 		InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
 		LoadFromParams(&a);
 		UpdateInsertListSoft();
-		DrawEdgePoint();
-		InsertProvider->RefreshCutter(CurrentIndex, &a);
+		UpdateDisplayDefault(&a);
 	}
 
 	*pResult = 0;
@@ -254,7 +251,7 @@ void CTB_OriDlg::OnEnChangeGamma()
 	IndInsOrientation a;
 	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
 	StoreToParams(&a);
-	InsertProvider->RefreshCutter(CurrentIndex, &a);
+	UpdateDisplayDefault(&a);
 }
 
 
@@ -272,8 +269,8 @@ void CTB_OriDlg::OnEnChangePhi()
 
 void CTB_OriDlg::OnEnChangeDiameter()
 {
-	OnEnChangeGamma();
 	StoreKinematicParams();
+	OnEnChangeGamma();
 }
 
 void CTB_OriDlg::OnEnChangeAxisrot()
@@ -290,19 +287,12 @@ void CTB_OriDlg::OnEnChangeZoffset()
 
 void CTB_OriDlg::OnHScroll(UINT, UINT, CScrollBar*)
 {
-	// TEMP
-	IndInsOrientation a;
-	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
-	StoreToParams(&a);
-	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
-	InsertProvider->RefreshCutter(CurrentIndex, &a);
-	DrawEdgePoint();
+	UpdateDisplayDefault();
 }
 
 void CTB_OriDlg::OnCbnSelchangeActiveedge()
 {
-	OnEnChangeGamma();
-	DrawEdgePoint();
+	UpdateDisplayDefault();
 }
 
 
@@ -315,29 +305,6 @@ void CTB_OriDlg::OnBnClickedOk()
 	CDialogEx::OnOK();
 }
 
-
-void CTB_OriDlg::OnBnClickedDisplayreliefangles()
-{
-	IndInsOrientation a;
-	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
-	StoreToParams(&a);
-	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
-	const IIndexableInsertSeated* iis;
-	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
-	InsertProvider->GraphReliefAngle(CurrentIndex, iis, GetScale());
-}
-
-void CTB_OriDlg::OnBnClickedDisplaykinematicreliefangles()
-{
-	IndInsOrientation a;
-	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
-	StoreToParams(&a);
-	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
-	const IIndexableInsertSeated* iis;
-	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
-	gp_Vec vel = gp_Vec(feedx, feedy, relvel);
-	InsertProvider->GraphKinematicReliefAngle(CurrentIndex, iis, vel, GetScale());
-}
 
 
 void CTB_OriDlg::OnEnChangeFeedx()
@@ -429,6 +396,7 @@ void CTB_OriDlg::SetScale(double scale)
 }
 void CTB_OriDlg::OnEnChangeScale()
 {
+	UpdateDisplayDefault();
 }
 
 
@@ -444,4 +412,66 @@ void CTB_OriDlg::OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult)
 		InsertProvider->UpdateIndInsAttributes(index, &atrs);
 	}
 	*pResult = 0;
+}
+
+
+void CTB_OriDlg::OnBnClickedDisplayreliefanglescheck()
+{
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedDisplaykinematicreliefanglescheck()
+{
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedDisplayreliefangles()
+{
+}
+
+void CTB_OriDlg::OnBnClickedDisplaykinematicreliefangles()
+{
+}
+
+void CTB_OriDlg::UpdateDisplayDefault()
+{
+	IndInsOrientation a;
+	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
+	StoreToParams(&a);
+	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
+	UpdateDisplayDefault(&a);
+}
+
+void CTB_OriDlg::UpdateDisplayDefault(const IndInsOrientation* orientation_data)
+{
+	int flags = UD_ACTIVEPOINT;
+	if (ShowReliefGraphCheck.GetCheck() == TRUE) flags |= UD_RELIEF_ANGLE;
+	if (ShowReliefKinematicGraphCheck.GetCheck() == TRUE) flags |= UD_KINEMATIC_RELIEF_ANGLE;
+	UpdateDisplay(orientation_data, flags);
+}
+
+void CTB_OriDlg::UpdateDisplay(const IndInsOrientation* orientation_data, int flags)
+{
+	InsertProvider->RefreshCutter(CurrentIndex, orientation_data);
+	if (flags & UD_ACTIVEPOINT)
+	{
+		DrawEdgePoint();
+	}
+	if (flags & UD_RELIEF_ANGLE)
+	{
+		const IIndexableInsertSeated* iis;
+		InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
+		InsertProvider->GraphReliefAngle(CurrentIndex, iis, GetScale());
+	}
+	else InsertProvider->HideReliefAngle(CurrentIndex);
+	if (flags & UD_KINEMATIC_RELIEF_ANGLE)
+	{
+		const IIndexableInsertSeated* iis;
+		InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
+		gp_Vec vel = gp_Vec(feedx, feedy, relvel);
+		InsertProvider->GraphKinematicReliefAngle(CurrentIndex, iis, vel, GetScale());
+	}
+	else InsertProvider->HideKinematicReliefAngle(CurrentIndex);
 }

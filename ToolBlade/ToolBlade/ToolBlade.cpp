@@ -23,9 +23,9 @@ __declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters* IIt
 __declspec(dllexport) IIndexableInsert* CreateInsertAndPreview(Handle_AIS_InteractiveContext AISC, const IndInsParameters* IIt)
 {
 	IIndexableInsert* iii = CreateInsert(IIt);
-	if(AISC->DisplayStatus(DisplayedShape)==AIS_DS_Displayed) AISC->Erase(DisplayedShape, true);
+	if(AISC->DisplayStatus(DisplayedShape)==AIS_DS_Displayed) AISC->Erase(DisplayedShape, false);
 	DisplayedShape = new AIS_Shape(iii->ConstructToolBlade());
-	AISC->SetDisplayMode(AIS_Shaded, true);
+	AISC->SetDisplayMode(AIS_Shaded, false);
 	AISC->Display(DisplayedShape, true);
 	thisAISC = AISC;
 	return iii;
@@ -44,10 +44,10 @@ __declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert* II,
 //Добавляет формы режущей пластины в контекст с данными, передаваемыми через запись
 __declspec(dllexport) IIndexableInsertSeated* OrientInsertAndPreview(Handle_AIS_InteractiveContext AISC, IIndexableInsert* II, const IndInsOrientation* IIo)
 {
-	if (AISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) AISC->Erase(DisplayedShape, true);
+	if (AISC->DisplayStatus(DisplayedShape) == AIS_DS_Displayed) AISC->Erase(DisplayedShape, false);
 	CIndInsTooth* mi = dynamic_cast<CIndInsTooth*>(OrientInsert(II, IIo));
 	DisplayedShape = new AIS_Shape(mi->RotatedIntoPlace());
-	AISC->SetDisplayMode(AIS_Shaded, true);
+	AISC->SetDisplayMode(AIS_Shaded, false);
 	AISC->Display(DisplayedShape, true);
 	thisAISC = AISC;
 	return mi;

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "CuttingTooth.h"
 #include <math.h>
+#include <cassert>
 
 ////////////////////// CCuttingTooth ////////////////////////
 
@@ -135,6 +136,8 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 
 	int iK0maxX, iK0maxY;
 	ContourExtremities(iK0maxX, iK0maxY, 0);
+	assert(iK0maxX != -1);
+	assert(iK0maxY != -1);
 	double ty = ftY(iK0maxY, 1);
 	double tx = ftY(iK0maxX, 0);
 	gp_XYZ pmaxY = fK(int(floor(ty)), fmod(ty, 1.)).XYZ() * Fpl0;
@@ -344,17 +347,17 @@ double CIndInsTooth::ftY(int iY0, int i)
 		ftrot.Value(0, lower);
 		ftrot.Value(1, upper);
 		troot = math_BracketedRoot(ftrot, 0, 1, 1e-10).Root();
+		troot += iY0;
 	}
-	troot += iY0;
 	if (troot < 0)  troot = IndIns->NumPoint() + troot;
 	return troot;
 }
 void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 {
 	int count = IndIns->NumPoint();
-	gp_Pnt K0max = K0(0);
-	iK0maxX = 0;
-	iK0maxY = 0;
+	gp_Pnt K0max = K0r(0);
+	iK0maxX = -1;
+	iK0maxY = -1;
 	int ix = -1;
 	int iy = -1;
 	int sg = MainEdgeDir;
@@ -363,29 +366,25 @@ void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 	{
 		int li = i - 1; if (li < 0) li += count;
 		int ni = i + 1; if (ni >= count) ni -= count;
-		double KOi = K0(i).Y() * sg;
-		double KOli = K0(li).Y() * sg;
-		double KOni = K0(ni).Y() * sg;
-		Kois[i][0] = K0(li).Y() * sg; Kois[i][1] = KOi;  Kois[i][2] = K0(ni).Y() * sg;
-		if (KOli >= KOi&& KOni >= KOi)
+		double KOi = K0r(i).Y() * sg;
+		double KOli = K0r(li).Y() * sg;
+		double KOni = K0r(ni).Y() * sg;
+		Kois[i][0] = K0r(li).Y() * sg; Kois[i][1] = KOi;  Kois[i][2] = K0r(ni).Y() * sg;
+		if (KOli > KOi&& KOni >= KOi)
 		{
 			iy++;
 			if (!iy)
 			{
-				if (IndIns->d_order[li] > 1) iK0maxY = li;
-				else if (IndIns->d_order[i] > 1) iK0maxY = i;
-				else iK0maxY = i;
+				iK0maxY = i;
 			}
 		}
-		KOi = K0(i).X();
-		if (K0(li).X() <= KOi && KOi > K0(ni).X())
+		KOi = K0r(i).X();
+		if (K0r(li).X() < KOi && KOi >= K0r(ni).X())
 		{
 			ix++;
 			if (!ix)
 			{
-				if (IndIns->d_order[li] > 1) iK0maxX = li;
-				else if (IndIns->d_order[i] > 1) iK0maxX = i;
-				else iK0maxX = i;
+				iK0maxX = i;
 			}
 		}
 	}

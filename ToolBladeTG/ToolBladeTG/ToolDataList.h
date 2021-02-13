@@ -33,5 +33,7 @@ interface IInstrInsList abstract
 	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) = 0;
 
 	virtual HRESULT GraphReliefAngle (int index, const IIndexableInsertSeated*, double scale) = 0;
+	virtual HRESULT HideReliefAngle(int index) = 0;
 	virtual HRESULT GraphKinematicReliefAngle(int index, const IIndexableInsertSeated*, gp_Vec velocity, double scale) = 0;
+	virtual HRESULT HideKinematicReliefAngle(int index) = 0;
 };

@@ -504,6 +504,15 @@ HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeate
 	return S_OK;
 }
 
+HRESULT CToolBladeTGDoc::HideReliefAngle(int index)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	Handle_AIS_Shape oldgraph = CutterParams[index].graphs[GTRelief];
+	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
+	return S_OK;
+}
+
 HRESULT CToolBladeTGDoc::GraphKinematicReliefAngle(int index, const IIndexableInsertSeated* iis, gp_Vec velocity, double scale)
 {
 	size_t indop(index);
@@ -513,6 +522,15 @@ HRESULT CToolBladeTGDoc::GraphKinematicReliefAngle(int index, const IIndexableIn
 	auto graph = GraphFunction(iis, [=](Standard_Integer n, Standard_Real f)->double {return iis->EffectiveKinematicReliefAngle(n, f, velocity); }, Quantity_NOC_HONEYDEW, scale);
 	CutterParams[index].graphs[GTKinematicRelief] = graph;
 	myAISContext->Display(graph, Standard_True);
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::HideKinematicReliefAngle(int index)
+{
+	size_t indop(index);
+	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
+	Handle_AIS_Shape oldgraph = CutterParams[index].graphs[GTKinematicRelief];
+	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
 	return S_OK;
 }
 

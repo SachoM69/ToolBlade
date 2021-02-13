@@ -35,6 +35,13 @@ protected:
 
 	double GetScale();
 	void SetScale(double scale);
+
+#define UD_RELIEF_ANGLE 2
+#define UD_KINEMATIC_RELIEF_ANGLE 4
+#define UD_ACTIVEPOINT 8
+	void UpdateDisplayDefault();
+	void UpdateDisplayDefault(const IndInsOrientation* orientation_data);
+	void UpdateDisplay(const IndInsOrientation* orientation_data, int flags);
 private:
 	IInstrInsList* InsertProvider;
 	int CurrentIndex;
@@ -81,4 +88,10 @@ public:
 	afx_msg void OnEnChangeAxisrot();
 	afx_msg void OnEnChangeZoffset();
 	afx_msg void OnLvnItemchangedIilist(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedDisplayreliefanglescheck();
+	afx_msg void OnBnClickedDisplaykinematicreliefanglescheck();
+	BOOL ShowReliefGraph;
+	BOOL ShowReliefKinematicGraph;
+	CButton ShowReliefGraphCheck;
+	CButton ShowReliefKinematicGraphCheck;
 };

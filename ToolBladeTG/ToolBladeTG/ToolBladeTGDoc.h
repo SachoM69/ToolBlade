@@ -33,9 +33,9 @@ public:
 private:
 	enum GraphType
 	{
-		GTRelief,
-		GTKinematicRelief,
-		GTRack
+		GTRelief = 0,
+		GTKinematicRelief = 1,
+		GTRack = 2
 	};
 	struct IndInsData
 	{
@@ -85,7 +85,9 @@ public:
 	virtual HRESULT RefreshCutter(int index, const IndInsParameters*) override;
 	virtual HRESULT RefreshCutter(int index, const IndInsOrientation*) override;
 	virtual HRESULT GraphReliefAngle(int index, const IIndexableInsertSeated*, double scale) override;
+	virtual HRESULT HideReliefAngle(int index) override;
 	virtual HRESULT GraphKinematicReliefAngle(int index, const IIndexableInsertSeated*, gp_Vec velocity, double scale) override;
+	virtual HRESULT HideKinematicReliefAngle(int index) override;
 
 // Реализация
 public:
