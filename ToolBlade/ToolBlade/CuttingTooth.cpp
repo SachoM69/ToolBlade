@@ -146,7 +146,7 @@ void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 	Fpl1.SetX((floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.X(): -pmaxY.X()) + plx);
 	Fpl1.SetY(-pmaxY.Y() + ply);
 	Fpl1.SetZ(floor(tx) == floor(ty) || ceil(tx) == ceil(ty) ? -pmaxX.Z(): -pmaxY.Z());
-	Fpl.SetTransformation(gp_Quaternion(Fpl0), gp_Vec(0, 0, 0));// Fpl1);
+	Fpl.SetTransformation(gp_Quaternion(Fpl0), Fpl1);
 	//Fpl.SetTranslation(gp_Vec(0, 0, 0));
 }
 
@@ -315,7 +315,7 @@ public:
 		gp_Vec ft = mytooth->ft(id, X);
 		gp_XYZ ft_trans =  ft.XYZ() * mytooth->Fpl0;
 		F = ft_trans.Coord(coord + 1);
-		if (F == 0)
+		if (abs(F) < 1e-10)
 		{
 			// edge case workaround
 			double oppositeval;
@@ -333,7 +333,7 @@ private:
 double CIndInsTooth::ftY(int iY0, int i)
 {
 	double troot = 0;
-	double t = double(iY0) / dK;
+	double t = double(iY0);
 	int t0 = iY0;
 	int t1 = t0 + 1;
 	if (IndIns->d_order[t0] == 1) troot = t;
@@ -358,12 +358,16 @@ void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 	int ix = -1;
 	int iy = -1;
 	int sg = MainEdgeDir;
+	double Kois[12][3];
 	for (int i = 0; i < count; i++)
 	{
 		int li = i - 1; if (li < 0) li += count;
 		int ni = i + 1; if (ni >= count) ni -= count;
 		double KOi = K0(i).Y() * sg;
-		if (K0(li).Y() * sg > KOi && (K0(ni).Y() * sg > KOi))
+		double KOli = K0(li).Y() * sg;
+		double KOni = K0(ni).Y() * sg;
+		Kois[i][0] = K0(li).Y() * sg; Kois[i][1] = KOi;  Kois[i][2] = K0(ni).Y() * sg;
+		if (KOli >= KOi&& KOni >= KOi)
 		{
 			iy++;
 			if (!iy)

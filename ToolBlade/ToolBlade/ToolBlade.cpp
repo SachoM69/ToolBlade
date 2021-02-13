@@ -14,13 +14,7 @@ IIndexableInsert* DisplayedInsert;
 
 __declspec(dllexport) IIndexableInsert* CreateInsert(const IndInsParameters* IIt)
 {
-	//IIt->IGroup = 0; IIt->IIForm = 0;
-	IndInsParameters* b = new IndInsParameters; b->IGroup = 0; b->IIForm = 0; b->FormChar = 'P'; b->n = 6;
-	b->eps = 0; b->ReliefAng = 3 / 180 * M_PI; b->RackAng = 10/180*M_PI; b->HT = 0; b->VertForm = 2; b->r = 0.5;
-	b->Dim = 6.35; b->Thick = 1.59; b->Dir = 0;
-	b->DHole = 2.5;
-	b->TolClass = 'A';
-	CIndexableInsert* PrefdIndIns = new CIndexableInsert(b);
+	CIndexableInsert* PrefdIndIns = new CIndexableInsert(IIt);
 	PrefdIndIns->ConstructToolBlade();
 	return dynamic_cast<IIndexableInsert*>(PrefdIndIns);
 }

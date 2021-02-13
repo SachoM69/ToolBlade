@@ -172,8 +172,8 @@ void CTB_OriDlg::DrawEdgePoint()
 	}*/
 	object->IIVertex(PointCB.GetCurSel(), pos, edgept, V, Ax3);
 	InsertProvider->ShowPoint(edgept, 0, true);
-	InsertProvider->ShowPoint(object->XExtremityPoint(), 1, true);
-	InsertProvider->ShowPoint(object->YExtremityPoint(), 2, true);
+	//InsertProvider->ShowPoint(object->XExtremityPoint(), 1, true);
+	//InsertProvider->ShowPoint(object->YExtremityPoint(), 2, true);
 	//нарисовать стрелку из точки edgept в направлении V
 }
 
