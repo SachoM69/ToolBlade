@@ -78,12 +78,12 @@ private:
 	double II_Thick;
 	int IIn_Thick;
 	CComboBox IIVertFormList;//форма вершины пластины
-	int II_VertForm;
+	VertForm II_VertForm;
 	CComboBox IIVertDimList;
 	int IIn_R;//номер радиуса в списке
 	double II_r;//величина радиуса
 	CComboBox IIDirList;//Направление резания
-	int II_Dir;
+	CutDirection II_Dir;
 	CComboBox IIDimHoleList;
 	double II_DimHole;
 	int IIn_DHole;

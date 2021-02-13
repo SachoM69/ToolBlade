@@ -36,7 +36,7 @@ __declspec(dllexport) IIndexableInsertSeated* OrientInsert(IIndexableInsert* II,
 	CIndexableInsert* PrefdIndIns = dynamic_cast<CIndexableInsert*>(II);
 	//CIndInsTooth* mi = new CIndInsTooth(DEG(20), DEG(40), DEG(0), IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
 	CIndInsTooth* mi = new CIndInsTooth(IIo->Gamma, IIo->Phi, IIo->Lambda, IIo->Diameter, IIo->Type, IIo->Dir, PrefdIndIns);
-	mi->SetTipParameters(IIo->PointIndex, IIo->EdgePosition, IIo->AxisRotation, IIo->Zoffset);
+	mi->SetTipParameters(IIo->EdgeIndex, IIo->EdgePosition, IIo->AxisRotation, IIo->Zoffset);
 	mi->CalcCutterAngles();
 	return mi;
 }

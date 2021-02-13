@@ -33,6 +33,8 @@ CTB_DesDlg::CTB_DesDlg(IInstrInsList* myprov, CWnd* pParent /*=NULL*/)
 {
 	InsertProvider=myprov;
 	CurrentIndex=0;
+	Create(IDD);
+	ShowWindow(SW_SHOW);
 }
 
 CTB_DesDlg::~CTB_DesDlg()
@@ -207,7 +209,15 @@ void CTB_DesDlg::CollectDlgData()
 	II_Thick=THarr[sel];//Толщина
 
 	sel = IIDirList.GetCurSel();
-	II_Dir=sel; //Направление
+	switch (sel) //Направление
+	{
+	case 0:
+		II_Dir = Dir_Right;
+		break;
+	case 1:
+		II_Dir = Dir_Left;
+		break;
+	}
 
 	OnCbnSelchangeIndinsvertform();
 	if (II_VertForm==VF_SHARP)
@@ -265,7 +275,7 @@ void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 	II.IIForm=IIForm;
 	II.FormChar=FormChar;
 	II.eps=II_eps;
-	II.n=II_n;
+	II.VertexCount=II_n;
 
 	II.ReliefAng=II_ReliefAng;
 	II.RackAng = II_RackAng;
@@ -701,16 +711,17 @@ void CTB_DesDlg::SetActiveEdgeList()
 
 void CTB_DesDlg::OnClose()
 {
-
 	CDialog::OnClose();
+	DestroyWindow();
 }
 
 
 void CTB_DesDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
-	InsertProvider->ShowPoint(gp_Pnt(), 0, false);
+	//InsertProvider->ShowPoint(gp_Pnt(), 0, false);
 	delete ImageList;
+	delete this;
 }
 
 

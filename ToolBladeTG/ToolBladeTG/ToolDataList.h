@@ -37,4 +37,7 @@ interface IInstrInsList abstract
 	virtual HRESULT HideReliefAngle(int index) = 0;
 	virtual HRESULT GraphKinematicReliefAngle(int index, const IIndexableInsertSeated*, gp_Vec velocity, double scale) = 0;
 	virtual HRESULT HideKinematicReliefAngle(int index) = 0;
+
+	virtual HRESULT ShowPlane(gp_Pln, int planeindex, bool show) = 0;
+	virtual HRESULT ShowAxis(gp_Vec, int vectorindex, bool show) = 0;
 };

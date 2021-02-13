@@ -39,6 +39,7 @@ protected:
 #define UD_RELIEF_ANGLE 2
 #define UD_KINEMATIC_RELIEF_ANGLE 4
 #define UD_ACTIVEPOINT 8
+#define UD_SHOWPLANES 16
 	void UpdateDisplayDefault();
 	void UpdateDisplayDefault(const IndInsOrientation* orientation_data);
 	void UpdateDisplay(const IndInsOrientation* orientation_data, int flags);
@@ -100,4 +101,7 @@ public:
 	afx_msg void OnBnClickedSelectfpr();
 	afx_msg void OnBnClickedSelectrpm();
 	afx_msg void OnBnClickedSelectvelocity();
+	CButton ShowPlanes;
+	afx_msg void OnBnClickedDisplayplanescheck();
+	afx_msg void OnDestroy();
 };

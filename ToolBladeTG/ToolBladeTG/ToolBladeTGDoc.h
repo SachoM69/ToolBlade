@@ -89,6 +89,8 @@ public:
 	virtual HRESULT HideReliefAngle(int index) override;
 	virtual HRESULT GraphKinematicReliefAngle(int index, const IIndexableInsertSeated*, gp_Vec velocity, double scale) override;
 	virtual HRESULT HideKinematicReliefAngle(int index) override;
+	virtual HRESULT ShowPlane(gp_Pln, int planeindex, bool show) override;
+	virtual HRESULT ShowAxis(gp_Vec, int vectorindex, bool show) override;
 
 // Реализация
 public:

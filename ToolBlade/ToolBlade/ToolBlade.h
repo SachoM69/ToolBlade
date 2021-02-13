@@ -12,7 +12,6 @@ __declspec(dllexport) void DestroyInsert(const IIndexableInsertSeated*);
 
 enum VertForm { VF_SHARP=0, VF_FILLET=1, VF_CHAMFER=2};
 //тип отверсти€ в пластине
-enum HoleType { NoHole=0, CylHole=1, TorHole14060=2, TorHole24060=3, TorHole17090=4, TorHole27090=5};
 /*без отверсти€
 с цилиндрическим отверстием
 с односторонним тороидальным отверстием дл€ винта с потайной головкой с углом от 40 до 60 градусов
@@ -21,6 +20,7 @@ enum HoleType { NoHole=0, CylHole=1, TorHole14060=2, TorHole24060=3, TorHole1709
 с двусторонним тороидальным отверстием дл€ винта с потайной головкой с углом от 70 до 90 градусов
 ƒругое
 */
+enum HoleType { NoHole=0, CylHole=1, TorHole14060=2, TorHole24060=3, TorHole17090=4, TorHole27090=5};
 
 //Ќаправление резани€ инструмента
 enum DirToolType {DirTool_Right=0, DirTool_Left=1};
@@ -31,12 +31,12 @@ enum CutDirection {Dir_Right=0, Dir_Left=1};
 enum EdgeDir {EdgeDir_Left=-1, EdgeDir_Right=1};
 
 //“ип инструмента
-enum ToolType {Turning_Cutter=0, Boring_Cutter=1, Drilling_Tool=2, Milling_Tool=3};
 /*–езец, наружное точение;
 –езец, растачивание;
 ќсевой инструмент(сверло, зенкер, развертка)
 ‘реза;
 */
+enum ToolType {Turning_Cutter=0, Boring_Cutter=1, Drilling_Tool=2, Milling_Tool=3};
 
 
 struct IndInsParameters
@@ -44,16 +44,16 @@ struct IndInsParameters
 	int IGroup;//номер группы пластины
 	int IIForm;//номер формы пластины
 	wchar_t FormChar;
-	int n;//число вершин
+	int VertexCount;//число вершин
 	double eps;//угол при вершине
 	double ReliefAng;//величина заднего угла
 	double RackAng; //величина переднего угла
 	int HT;//Ќаличие и форма отверсти€
-	int VertForm;//форма вершины
+	VertForm VertForm;//форма вершины
 	double r;//радиус округлени€ вершины
 	double Dim;//–азмер
 	double Thick;//“олщина
-	int Dir;//направление резани€
+	CutDirection Dir;//направление резани€
 	double DHole;//диаметр отверсти€
 	double B, L; //размеры пластин 3й и 4й групп 
 	wchar_t TolClass; //обозначение класса допуска
@@ -72,7 +72,7 @@ struct IndInsOrientation
 	ToolType Type;
 	DirToolType Dir;
 
-	int PointIndex;
+	int EdgeIndex;
 	double EdgePosition;
 };
 
@@ -100,4 +100,5 @@ public:
 	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const = 0;
 	virtual gp_Pnt XExtremityPoint() const = 0;
 	virtual gp_Pnt YExtremityPoint() const = 0;
+	virtual gp_Vec ToolAxis() const = 0;
 };

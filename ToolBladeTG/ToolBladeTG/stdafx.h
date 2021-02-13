@@ -118,6 +118,11 @@
 #include <AIS_Point.hxx>
 #include <Geom_Axis2Placement.hxx>
 
+#include <AIS_Plane.hxx>
+#include <AIS_Axis.hxx>
+#include <Geom_Axis1Placement.hxx>
+#include <Prs3d_PlaneAspect.hxx>
+
 /*
 #include <AIS_Drawer.hxx>
 #include <AIS_InteractiveContext.hxx>

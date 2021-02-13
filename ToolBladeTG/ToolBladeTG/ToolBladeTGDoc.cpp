@@ -75,14 +75,14 @@ IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 	IndIns.IGroup=0;//номер группы пластины
 	IndIns.IIForm=2;//номер формы пластины
 	IndIns.FormChar='P';
-	IndIns.n=3;
+	IndIns.VertexCount=3;
 	IndIns.ReliefAng=0;//валичина заднего угла
 	IndIns.HT=CylHole;//Наличие и форма отверстия
 	IndIns.Dim=6.35;//Размер
 	IndIns.Thick=3.5;//Толщина
 	IndIns.Dir=Dir_Right;//направление резания
 	IndIns.DHole=2.5;
-	IndIns.VertForm=0;
+	IndIns.VertForm=VF_SHARP;
 	IndIns.B=IndIns.L=0;
 	IndIns.eps=0;
 	IndIns.r=0.1;
@@ -97,7 +97,7 @@ IndInsOrientation CToolBladeTGDoc::GetDefaultOrientation()
 	IndOri.Diameter = 100;
 	IndOri.Dir = DirTool_Right;
 	IndOri.Type = Turning_Cutter;
-	IndOri.PointIndex = 0;
+	IndOri.EdgeIndex = 0;
 	IndOri.EdgePosition = 0;
 	IndOri.Gamma = 0;
 	IndOri.Lambda = 0;
@@ -287,8 +287,8 @@ HRESULT CToolBladeTGDoc::UpdateDisplay()
 void CToolBladeTGDoc::OnEdparams()
 {
 	CTB_DesDlg* NPGetter = new CTB_DesDlg(this);
-	NPGetter->DoModal();
-	delete NPGetter;
+	//NPGetter->DoModal();
+	//delete NPGetter;
 }
 
 HRESULT CToolBladeTGDoc::QueryIndInsInformation(int index, IndInsParameters* res)
@@ -446,13 +446,6 @@ HRESULT CToolBladeTGDoc::ShowPoint(gp_Pnt a, int index, bool show)
 		ppp[index] = new AIS_Point(c);
 		myAISContext->Display(ppp[index], false);
 	}
-	/*myAISContext->Erase(VisPnt, true);
-	if(show)
-	{
-		Handle_Geom_CartesianPoint c = new Geom_CartesianPoint(a);
-		VisPnt = new AIS_Point(c);
-		myAISContext->Display(VisPnt, true);
-	}*/
 	return S_OK;
 }
 
@@ -464,7 +457,7 @@ void CToolBladeTGDoc::OnShowtool()
 			InsertShape(myAISContext);
 		else */
 		/*
-		IndInsOrientation a; a.PointIndex = 0; a.Diameter = 0.02; a.Dir = DirTool_Right; a.EdgePosition = 0; a.Phi = 0;
+		IndInsOrientation a; a.EdgeIndex = 0; a.Diameter = 0.02; a.Dir = DirTool_Right; a.EdgePosition = 0; a.Phi = 0;
 		a.Gamma = 0; a.Lambda = 0; a.Type = Turning_Cutter;
 		CutterParams[0].libcpptr = OrientInsertAndPreview(myAISContext, CutterParams.begin()->libcpptr, &a); // не самый красивый способ
 		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
@@ -476,8 +469,8 @@ void CToolBladeTGDoc::OnShowtool()
 			myAISContext->Display(mca, true);*/
 
 		CTB_OriDlg* NPGetter = new CTB_OriDlg(this);
-		NPGetter->DoModal();
-		delete NPGetter;
+		//NPGetter->DoModal();
+		//delete NPGetter;
 
 	}
 	catch (Standard_OutOfRange & e)
@@ -537,6 +530,45 @@ HRESULT CToolBladeTGDoc::HideKinematicReliefAngle(int index)
 	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 	Handle_AIS_Shape oldgraph = CutterParams[index].graphs[GTKinematicRelief];
 	if (!oldgraph.IsNull()) myAISContext->Erase(oldgraph, Standard_False);
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::ShowPlane(gp_Pln planedesc, int planeindex, bool show)
+{
+	static std::vector<Handle(AIS_Plane)> ppp;
+	if (ppp.size() <= planeindex) ppp.push_back(0);
+	myAISContext->Erase(ppp[planeindex], false);
+	if (show)
+	{
+		Handle(Geom_Plane) plane_geom = new Geom_Plane(planedesc);
+		Handle(AIS_Plane) Plane = new AIS_Plane(plane_geom);
+		ppp[planeindex] = Plane;
+
+		Plane->SetCenter(planedesc.Location());
+		myAISContext->Display(Plane, false);
+		Handle(Prs3d_PlaneAspect) planeAspect = Plane->Attributes()->PlaneAspect();
+		planeAspect->SetDisplayIso(Standard_True);
+		planeAspect->IsoAspect()->SetColor(Quantity_NOC_LIGHTBLUE);
+		planeAspect->EdgesAspect()->SetColor(Quantity_NOC_LIGHTBLUE);
+		planeAspect->SetIsoDistance(1); 
+		planeAspect->SetPlaneLength(10, 10);
+	}
+	return S_OK;
+}
+
+HRESULT CToolBladeTGDoc::ShowAxis(gp_Vec vecdesc, int vectorindex, bool show)
+{
+	static std::vector<Handle(AIS_Axis)> ppp;
+	if (ppp.size() <= vectorindex) ppp.push_back(0);
+	myAISContext->Erase(ppp[vectorindex], false);
+	if (show)
+	{
+		Handle(Geom_Axis1Placement) axis_place = new Geom_Axis1Placement(gp_Pnt(), gp_Dir(vecdesc));
+		Handle(AIS_Axis) Axis = new AIS_Axis(axis_place);
+		ppp[vectorindex] = Axis;
+
+		myAISContext->Display(Axis, false);
+	}
 	return S_OK;
 }
 

@@ -7,7 +7,7 @@ void CIndexableInsert::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** dar
 //ПРОФИЛЬ РЕЖУЩЕЙ КРОМКИ РАВНОСТОРОННИХ И РАВНОУГОЛЬНЫХ ПЛАСТИН МНОГОГРАННОЙ ФОРМЫ
 {
 	double d=IInst.Dim, r=IInst.r;
-	UINT len=(r<=0?1:3)*IInst.n+1;
+	UINT len=(r<=0?1:3)*IInst.VertexCount+1;
 	//очистка и подготовка массивов
 	//массив контрольных точек кривой
 	node_p.clear();
@@ -16,20 +16,20 @@ void CIndexableInsert::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** dar
 	weight.clear();
 	weight.reserve(len);
 	d_order.clear();
-	d_order.resize((r<=0?1:2)*IInst.n);
+	d_order.resize((r<=0?1:2)*IInst.VertexCount);
 
 	curves.clear();
 	
 	//TColgp_Array1OfPnt& p1=**ptarr;
 	double eps2, psi, b, l, R, m;
-	eps2=pi*(IInst.n-2)/(IInst.n*2);
-	psi=2*pi/IInst.n;
+	eps2=pi*(IInst.VertexCount-2)/(IInst.VertexCount*2);
+	psi=2*pi/IInst.VertexCount;
 	b=r/sin(eps2);
 	l=d/tan(eps2);weight.push_back(1.);
 	R=l/(2*cos(eps2));
 	double wv=sin(eps2);
 
-	m=R-b+r+(IInst.n/2-floor(double(IInst.n/2))>0)?(d/2):-(d/2);
+	m=R-b+r+(IInst.VertexCount/2-floor(double(IInst.VertexCount/2))>0)?(d/2):-(d/2);
 	
 	if (r<=0) //пластина с острыми вершинами
 	{
@@ -49,7 +49,7 @@ void CIndexableInsert::rrm() //TColgp_Array1OfPnt** ptarr), void** w, void** dar
 		d_order[0]=2;
 		d_order[1]=1;
 	}
-	for (int i=1; i<IInst.n; i++)
+	for (int i=1; i<IInst.VertexCount; i++)
 	{
 		double psi_i=psi*i;
 	if (r<=0) //пластина с острыми вершинами
@@ -113,7 +113,7 @@ void CIndexableInsert::rtrm()//, void** w, void** darr)
 {
 	double d=IInst.Dim, r=IInst.r;
 	double r1=r;
-	int n=IInst.n;
+	int n=IInst.VertexCount;
 	UINT len=7*n;
 	//очистка и подготовка массивов
 	//массив контрольных точек кривой
@@ -188,7 +188,7 @@ void CIndexableInsert::rtrm_sh()//, void** w, void** darr)
 {
 	double d=IInst.Dim, r=IInst.r;
 	double r1=r;
-	int n=IInst.n;
+	int n=IInst.VertexCount;
 	UINT len=2*n+1;
 	//очистка и подготовка массивов
 	//массив контрольных точек кривой
@@ -465,7 +465,7 @@ TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 	switch(IInst.IGroup)
 	{
 	case 0:
-		if (IInst.n==0) rrrm();
+		if (IInst.VertexCount==0) rrrm();
 		else rrm();
 		break;
 	case 1:

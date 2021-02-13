@@ -23,6 +23,8 @@ CTB_OriDlg::CTB_OriDlg(IInstrInsList* myprov, CWnd* pParent /*=nullptr*/)
 	InsertProvider = myprov;
 	CurrentIndex = 0;
 	CurrentlyUpdating = false;
+	Create(IDD_ORIENTATION_DLG);
+	ShowWindow(SW_SHOW);
 }
 
 CTB_OriDlg::~CTB_OriDlg()
@@ -78,6 +80,7 @@ void CTB_OriDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DISPLAYKINEMATICRELIEFANGLESCHECK, ShowReliefKinematicGraphCheck);
 	DDX_Control(pDX, IDC_SELECTFPM, FPMRadio);
 	DDX_Control(pDX, IDC_SELECTFPR, FPRRadio);
+	DDX_Control(pDX, IDC_DISPLAYPLANESCHECK, ShowPlanes);
 }
 
 
@@ -106,6 +109,8 @@ BEGIN_MESSAGE_MAP(CTB_OriDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SELECTFPR, &CTB_OriDlg::OnBnClickedSelectfpr)
 	ON_BN_CLICKED(IDC_SELECTRPM, &CTB_OriDlg::OnBnClickedSelectrpm)
 	ON_BN_CLICKED(IDC_SELECTVELOCITY, &CTB_OriDlg::OnBnClickedSelectvelocity)
+	ON_BN_CLICKED(IDC_DISPLAYPLANESCHECK, &CTB_OriDlg::OnBnClickedDisplayplanescheck)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -122,8 +127,8 @@ void CTB_OriDlg::StoreToParams(IndInsOrientation* IIt)
 	IIt->Gamma = RAD(_wtof(s_gamma));
 	IIt->Phi = RAD(_wtof(s_phi));
 	IIt->Lambda = RAD(_wtof(s_lambda));
-	IIt->PointIndex = PointCB.GetCurSel();
-	if (IIt->PointIndex == -1) IIt->PointIndex = 0;
+	IIt->EdgeIndex = PointCB.GetCurSel();
+	if (IIt->EdgeIndex == -1) IIt->EdgeIndex = 0;
 	int curpos = PointSl.GetPos();
 	int minpos = PointSl.GetRangeMin();
 	int maxpos = PointSl.GetRangeMax();
@@ -150,7 +155,7 @@ void CTB_OriDlg::LoadFromParams(const IndInsOrientation* IIt)
 	PointCB.ResetContent();
 	CString sci;
 	SetActiveEdgeList();
-	PointCB.SetCurSel(IIt->PointIndex);
+	PointCB.SetCurSel(IIt->EdgeIndex);
 	PointSl.SetRange(0, 101);
 	PointSl.SetPos(int(IIt->EdgePosition * 101));
 	CString s_ar, s_zof;
@@ -306,6 +311,7 @@ void CTB_OriDlg::OnBnClickedOk()
 	StoreToParams(&a);
 	InsertProvider->UpdateIndInsOrientation(CurrentIndex, &a);
 	CDialogEx::OnOK();
+	DestroyWindow();
 }
 
 
@@ -473,6 +479,7 @@ void CTB_OriDlg::UpdateDisplayDefault(const IndInsOrientation* orientation_data)
 	int flags = UD_ACTIVEPOINT;
 	if (ShowReliefGraphCheck.GetCheck() == TRUE) flags |= UD_RELIEF_ANGLE;
 	if (ShowReliefKinematicGraphCheck.GetCheck() == TRUE) flags |= UD_KINEMATIC_RELIEF_ANGLE;
+	if (ShowPlanes.GetCheck() == TRUE) flags |= UD_SHOWPLANES;
 	UpdateDisplay(orientation_data, flags);
 }
 
@@ -498,6 +505,27 @@ void CTB_OriDlg::UpdateDisplay(const IndInsOrientation* orientation_data, int fl
 		InsertProvider->GraphKinematicReliefAngle(CurrentIndex, iis, vel, GetScale());
 	}
 	else InsertProvider->HideKinematicReliefAngle(CurrentIndex);
+	if (flags & UD_SHOWPLANES)
+	{
+		const IIndexableInsertSeated* iis;
+		InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
+		gp_Pnt point_on_edge;
+		gp_Vec tn;
+		gp_Ax3 ax;
+		iis->IIVertex(orientation_data->EdgeIndex, orientation_data->EdgePosition, point_on_edge, tn, ax);
+		gp_Pln norm = gp_Pln(point_on_edge, iis->NormalToReferencePlane());
+		gp_Pln tan = gp_Pln(point_on_edge, tn);
+		InsertProvider->ShowPlane(norm, 0, true);
+		InsertProvider->ShowPlane(tan, 1, true);
+	} 	else
+	{
+		InsertProvider->ShowPlane(gp_Pln(), 0, false);
+		InsertProvider->ShowPlane(gp_Pln(), 1, false);
+	}
+	const IIndexableInsertSeated* iis;
+	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
+	if(iis->ToolAxis().Magnitude()>0) InsertProvider->ShowAxis(iis->ToolAxis(), 0, true);
+	else InsertProvider->ShowAxis(iis->ToolAxis(), 0, false);
 	InsertProvider->UpdateDisplay();
 }
 
@@ -526,4 +554,21 @@ void CTB_OriDlg::OnBnClickedSelectvelocity()
 {
 	StoreKinematicParams();
 	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnBnClickedDisplayplanescheck()
+{
+	UpdateDisplayDefault();
+}
+
+
+void CTB_OriDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	IndInsOrientation a;
+	InsertProvider->QueryIndInsOrientation(CurrentIndex, &a);
+	UpdateDisplay(&a, 0);
+	delete this;
 }

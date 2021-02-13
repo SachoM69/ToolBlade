@@ -52,6 +52,9 @@ public:
 	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const override;
 	virtual gp_Pnt XExtremityPoint() const override;
 	virtual gp_Pnt YExtremityPoint() const override;
+
+	// ось инструмента. TODO класс инструмента?
+	virtual gp_Vec ToolAxis() const override;
 protected:
 	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;

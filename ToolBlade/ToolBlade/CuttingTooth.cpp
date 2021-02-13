@@ -253,6 +253,19 @@ gp_Pnt CCuttingTooth::YExtremityPoint() const
 	return oP;
 }
 
+gp_Vec CCuttingTooth::ToolAxis() const
+{
+	switch (Type)
+	{
+	case Drilling_Tool:
+		return gp_Vec(-tool_diam, 0, 0);
+	case Milling_Tool:
+		return gp_Vec(0, tool_diam * (Dir== DirTool_Right?1:-1), 0);
+	default:
+		return gp_Vec();
+	}
+}
+
 void CCuttingTooth::CalcCutterAngles()
 {
 	CalculateTipCoordinates();
@@ -304,8 +317,6 @@ gp_Pnt CIndInsTooth::fK(int PointIndex, double ti) const
 	IndIns->curves[PointIndex]->D0(ti, pt_on_cv);
 	return pt_on_cv;
 }
-
-#define dK 9
 
 class ftrot : public math_Function
 {
