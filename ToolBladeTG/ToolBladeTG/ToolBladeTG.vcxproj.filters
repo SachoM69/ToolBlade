@@ -114,6 +114,9 @@
     <ClInclude Include="ToolDataList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CTB_OriDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ToolBladeTG.cpp">
@@ -155,10 +158,18 @@
     <ClCompile Include="ToolTypeDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CTB_OriDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ToolBladeTG.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\bitmap1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

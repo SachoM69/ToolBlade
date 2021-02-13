@@ -77,8 +77,6 @@ void CViewBase::OnDraw(CDC* pDC)
 	CDocBase* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 
-	// TODO: add draw code for native data here
-
 	  myView->Redraw();
 
 }
@@ -125,7 +123,7 @@ void CViewBase::OnMouseMove(UINT nFlags, CPoint point)
 		SetCursor(AfxGetApp()->LoadStandardCursor(IDC_SIZEALL));
 		myView->Pan(point.x-myXmax,myYmax-point.y); // Realize the panning
 		myXmax = point.x; myYmax = point.y;	
-		myView->StartRotation(myXmax,myYmax);
+		myView->StartRotation(myXmax * ROTATE_MULT,myYmax * ROTATE_MULT);
 
 	 } else {
 		rotCount++;

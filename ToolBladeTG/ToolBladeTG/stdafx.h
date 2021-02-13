@@ -98,6 +98,7 @@
 #include <TopExp_Explorer.hxx>
 #include <BRep_Tool.hxx>
 #include <TopoDS.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <Geom_Surface.hxx>
 #include <Geom_Plane.hxx>
 #include <Geom_Point.hxx>
@@ -107,11 +108,20 @@
 #include <BRepTools.hxx>
 
 #include <BRepBuilderAPI_NurbsConvert.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
 #include <Graphic3d_AspectFillArea3d.hxx>
 #include <Aspect_PolygonOffsetMode.hxx>
 #include <Graphic3d_Group.hxx>
 #include <Standard_NullObject.hxx>
 #include <AIS_Point.hxx>
+#include <Geom_Axis2Placement.hxx>
+
+#include <AIS_Plane.hxx>
+#include <AIS_Axis.hxx>
+#include <Geom_Axis1Placement.hxx>
+#include <Prs3d_PlaneAspect.hxx>
 
 /*
 #include <AIS_Drawer.hxx>
@@ -232,3 +242,5 @@
 #if defined(_AFXDLL)
 #undef _AFXDLL
 #endif
+
+#include <functional>

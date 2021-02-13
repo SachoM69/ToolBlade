@@ -44,7 +44,6 @@ END_MESSAGE_MAP()
 
 CToolBladeTGView::CToolBladeTGView()
 {
-	// TODO: добавьте код создания
 
 }
 
@@ -56,8 +55,6 @@ CToolBladeTGView::~CToolBladeTGView()
 
 BOOL CToolBladeTGView::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO: изменить класс Window или стили посредством изменения
-	//  CREATESTRUCT cs
 
 	return CView::PreCreateWindow(cs);
 }

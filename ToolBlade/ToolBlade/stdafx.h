@@ -9,7 +9,10 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
-#include <windows.h>
+//#include <windows.h>
+#define min(a, b) ((a) < (b)? (a):(b))
+
+#include <algorithm>
 
 
 #pragma warning(  disable : 4244 )        // Issue warning 4244
@@ -53,6 +56,7 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
 #include <GC_MakeSegment.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_CartesianPoint.hxx>
@@ -76,11 +80,16 @@
 #include <gp_Dir2d.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Lin2d.hxx>
+#include <gp_Mat.hxx>
+#include <gp_Mat2d.hxx>
 #include <gp_Pnt2d.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 #include <gp_Vec2d.hxx>
+#include <gp_Quaternion.hxx>
 #include <MMgt_TShared.hxx>
+#include <Math_Function.hxx>
+#include <Math_BracketedRoot.hxx>
 #include <OSD_Environment.hxx>
 #include <Precision.hxx>
 #include <Prs3d_IsoAspect.hxx>
@@ -133,6 +142,7 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
 #include <TopoDS_Compound.hxx>
+#include <TopoDS_Iterator.hxx>
 #include <TopoDS_ListIteratorOfListOfShape.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Solid.hxx>
@@ -147,3 +157,5 @@
 #include <WNT_Window.hxx>
 
 #include "ToolBlade.h"
+
+#define Tolerance() (1e-6)
