@@ -66,7 +66,7 @@ private:
 	CEdit RackAngleTB;
 	double II_RackAng;
 
-	wchar_t FormChar;
+	wchar_t StandardShapeCode;
 	// Список обозначений класса допуска
 	CComboBox IITolClassList;
 	wchar_t II_TolClass;

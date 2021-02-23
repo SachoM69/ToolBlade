@@ -148,7 +148,7 @@ void CTB_DesDlg::CollectDlgData()
 	CString S;
 	IIFormList.GetLBText(sel,S);
 	//первый символ - обозначение формы
-	FormChar=S[0];
+	StandardShapeCode=S[0];
 	wchar_t S1=S[0];
 	II_n=0;
 	II_eps=0;
@@ -156,6 +156,13 @@ void CTB_DesDlg::CollectDlgData()
 	CString s_rack;
 	RackAngleTB.GetWindowText(s_rack);
 	II_RackAng = RAD(_wtof(s_rack));
+	OnCbnSelchangeIndinsvertform();
+	if (II_VertForm==VF_SHARP)
+		II_r=0;
+	else
+	{
+		OnCbnSelchangeIndinsvertdim();
+	}
 	switch (IGroup)
 	{
 		case 0: switch (S1)
@@ -182,18 +189,20 @@ void CTB_DesDlg::CollectDlgData()
 				II_B=10;
 				II_eps=M_PI/2;
 				II_r=1;
+				II_VertForm = VF_FILLET;
 				break;
 		case 3: II_L=14;
 				II_B=10;
 				II_r=1;
-				break;
-			switch (S1)
+				II_VertForm = VF_FILLET;
+				switch (S1)
 				{
-				case 'A' : II_eps=85+deg; break;
+				case 'A' : II_eps=85*deg; break;
 				case 'B' : II_eps=82*deg; break;
 				case 'K' : II_eps=55*deg; break;
 				case 'F' : II_eps=84*deg; break;
 				}
+				break;
 	}
 
 	sel = IIReliefAnglList.GetCurSel();	
@@ -219,13 +228,6 @@ void CTB_DesDlg::CollectDlgData()
 		break;
 	}
 
-	OnCbnSelchangeIndinsvertform();
-	if (II_VertForm==VF_SHARP)
-		II_r=0;
-	else
-	{
-		OnCbnSelchangeIndinsvertdim();
-	}
 //	II_Dir=IIDirList.GetCurSel();
 	OnCbnSelchangeIndinsdir();
 	IIn_DHole=IIDimHoleList.GetCurSel();
@@ -273,7 +275,7 @@ void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 	IndInsParameters &II = *IIt;
 	II.IGroup=IGroup;
 	II.IIForm=IIForm;
-	II.FormChar=FormChar;
+	II.StandardShapeCode = StandardShapeCode;
 	II.eps=II_eps;
 	II.VertexCount=II_n;
 
@@ -291,6 +293,9 @@ void CTB_DesDlg::StoreToParams(IndInsParameters* IIt)
 	II.Dir=II_Dir;//направление резания
 	II.DHole=II_DimHole;
 	II.TolClass=II_TolClass;
+
+	II.B = II_B;
+	II.L = II_L;
 	//II.ActEdge=II_ActiveEdge;
 }
 
@@ -346,8 +351,8 @@ void CTB_DesDlg::LoadFromParams(const IndInsParameters* IIt)
 	}
 	IIn_d=sel;
 
-	FormChar=IIt->FormChar;
-	switch (FormChar)
+	StandardShapeCode=IIt->StandardShapeCode;
+	switch (StandardShapeCode)
 	{
 /*	case 'H':
 	case 'O':
@@ -495,7 +500,7 @@ void CTB_DesDlg::OnCbnSelchangeIgroup()
 	IIDimList.SetCurSel(0);
 #endif
 	//LPTSTR TT = LPTSTR("_");
-	FormChar=S.GetAt(0);
+	StandardShapeCode=S.GetAt(0);
 	SetDimList();
 }
 
@@ -506,73 +511,73 @@ void CTB_DesDlg::SetDimList()
 
 	IIDimList.ResetContent();
 	d0=0;
-	if (FormChar == 'H') 
+	if (StandardShapeCode == 'H') 
 	{
 		CString a[8]={L"03", L"04", L"05", L"07", L"09", L"11", L"14", L"18"};
 		d0=3;
 		InitArr(a,8);
 	}
-	else if (FormChar == 'O')
+	else if (StandardShapeCode == 'O')
 	{
 		CString a[8]={L"02",	L"03",	L"04",	L"05",	L"06", L"07", L"10",	L"13"};
 		InitArr(a,8);
 		d0=3;
 	}
-	else if (FormChar == 'P')
+	else if (StandardShapeCode == 'P')
 	{
 		CString a[]={L"04", L"05", L"07", L"09", L"11", L"13", L"18", L"23"};
 		InitArr(a,8);
 		d0=3;
 	}
-	else if (FormChar == 'S') 
+	else if (StandardShapeCode == 'S') 
 	{
 		CString a[]={L"03", L"04", L"05", L"06", L"07", L"09", L"12", L"15", L"19", L"25", L"31"};
 		InitArr(a,11);
 		d0=0;
 	}
-	else if (FormChar == 'T')
+	else if (StandardShapeCode == 'T')
 	{
 		CString a[]={L"06", L"08", L"09", L"11", L"13", L"16", L"22", L"27", L"33", L"44", L"54"};
 		InitArr(a,11);
 		d0=0;
 	}
-	else if (FormChar == 'C')
+	else if (StandardShapeCode == 'C')
 	{
 		CString a[]={L"03", L"04", L"05", L"06", L"08", L"09", L"12", L"16", L"19", L"25", L"32"};
 		InitArr(a,11);
 		d0=0;
 	}
-	else if (FormChar == 'D') 
+	else if (StandardShapeCode == 'D') 
 	{
 		CString a[]={L"05", L"06", L"07", L"09", L"11", L"15",  L"19", L"23", L"31", L"38"};
 		InitArr(a,10);
 		d0=1;
 	}
-	else if (FormChar == 'E')
+	else if (StandardShapeCode == 'E')
 	{
 		CString a[]={L"04", L"05", L"06", L"08", L"09", L"13",  L"16", L"19", L"26", L"32"};
 		InitArr(a,10);
 		d0=1;
 	}
-	else if (FormChar == 'M')
+	else if (StandardShapeCode == 'M')
 	{
 		CString a[]={L"04", L"05", L"06", L"08", L"09", L"12",  L"15", L"19", L"25", L"31"};
 		InitArr(a,10);
 		d0=1;
 	}
-	else if (FormChar == 'V')
+	else if (StandardShapeCode == 'V')
 	{
 		CString a[]={L"08", L"09", L"11", L"13", L"16", L"22",  L"27", L"33", L"44", L"54"};
 		InitArr(a,10);
 		d0=1;
 	}
-	else if (FormChar == 'W')
+	else if (StandardShapeCode == 'W')
 	{
 		CString a[]={L"03",	L"04",	L"05",	L"06",	L"08",	L"10",	L"13",	L"17", L"21"};
 		InitArr(a,9);
 		d0=2;
 	}
-	else if (FormChar == 'R')
+	else if (StandardShapeCode == 'R')
 	{
 		CString a[]={L"06",	L"07",	L"09",	L"12",	L"15",	L"19",	L"25", L"31"};
 		InitArr(a,8);
@@ -701,12 +706,12 @@ void CTB_DesDlg::SetActiveEdgeList()
 	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	CString S;
 	ActiveEdgeList.ResetContent();
-	for(auto i=0; i<object->NumPoint(); i++)
+	for(auto i=0; i<object->PointCount(); i++)
 	{
 		S.Format(L"%d", i);
 		ActiveEdgeList.AddString(S);
 	}
-	if(II_ActiveEdge>=object->NumPoint()) II_ActiveEdge=object->NumPoint()-1;
+	if(II_ActiveEdge>=object->PointCount()) II_ActiveEdge=object->PointCount()-1;
 }
 
 void CTB_DesDlg::OnClose()

@@ -36,6 +36,12 @@
     <ClInclude Include="CuttingTooth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InsertPreview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexableInsertTool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -54,6 +60,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CuttingTooth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InsertPreview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexableInsertTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

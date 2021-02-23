@@ -31,7 +31,6 @@ public:
 	// n - номер кромки
 	// t - координата на кромке, 0..1
 	void CalcCutterAngles();
-	virtual TopoDS_Shape RotatedIntoPlace() = 0;
 
 	// Расчет положения вершины пластины в инструменте
 	void CalculateTipCoordinates();
@@ -99,9 +98,9 @@ public:
 	virtual void ProjectContourToPlane() override;
 	gp_Pnt K0(int index);
 	gp_Pnt K0r(int index);
-	virtual TopoDS_Shape RotatedIntoPlace() override;
+	virtual TopoDS_Shape RotatedIntoPlace() const override;
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_Vec& V, gp_Ax3& Ax3) const override;
-	virtual int NumPoint() const override;
+	virtual int PointCount() const override;
 	virtual gp_Dir NormalToReferencePlane() const override;
 	virtual double gammaP() const override;
 	virtual double alphaP() const override;

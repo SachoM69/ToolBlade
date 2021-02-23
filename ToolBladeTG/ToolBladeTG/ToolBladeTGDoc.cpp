@@ -74,7 +74,7 @@ IndInsParameters CToolBladeTGDoc::GetDefaultInsert()
 	IndInsParameters IndIns;
 	IndIns.IGroup=0;//номер группы пластины
 	IndIns.IIForm=2;//номер формы пластины
-	IndIns.FormChar='P';
+	IndIns.StandardShapeCode ='P';
 	IndIns.VertexCount=3;
 	IndIns.ReliefAng=0;//валичина заднего угла
 	IndIns.HT=CylHole;//Ќаличие и форма отверсти€
@@ -574,7 +574,7 @@ HRESULT CToolBladeTGDoc::ShowAxis(gp_Vec vecdesc, int vectorindex, bool show)
 
 Handle_AIS_Shape CToolBladeTGDoc::GraphFunction(const IIndexableInsertSeated* iis, std::function<double(Standard_Integer n, Standard_Real f)> function, const Quantity_Color& clr, double scale)
 {
-	int pt_cnt = iis->NumPoint();
+	int pt_cnt = iis->PointCount();
 	gp_XYZ norm = iis->NormalToReferencePlane().XYZ();
 
 	TopoDS_Shape ToolBlade;

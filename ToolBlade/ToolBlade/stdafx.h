@@ -156,6 +156,4 @@
 #include <V3d_Viewer.hxx>
 #include <WNT_Window.hxx>
 
-#include "ToolBlade.h"
-
 #define Tolerance() (1e-6)

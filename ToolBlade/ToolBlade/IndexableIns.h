@@ -1,6 +1,5 @@
 #pragma once
-#include <vector>
-
+#include "ToolBlade.h"
 
 typedef unsigned int uint;
 
@@ -18,6 +17,8 @@ protected:
 	std::vector<double> weight; //массив весов узловых точек
 	std::vector<Handle(Geom_BezierCurve)> curves;
 	std::vector<int>  npmain;//массив номеров узловых точек, принадлежащих контуру пластины
+	TopoDS_Shape ToolBladeShape;
+
 public:
 //	CIndexableIns(Standard_CString);
 	CIndexableInsert(const IndInsParameters*);
@@ -25,7 +26,8 @@ public:
 	CIndexableInsert(CIndexableInsert&&);
 	~CIndexableInsert(void);
 //	void SetData(Standard_CString);
-	virtual TopoDS_Shape ConstructToolBlade() override;
+	void CIndexableInsert::ConstructToolBlade();
+	virtual TopoDS_Shape GetResultingShape() const override;
 //	void ReadRealVals(void);
 	// ‘ункции создани€ геометрии.
 	void rrm();//–авносторонние равноугольные
@@ -36,7 +38,7 @@ public:
 	void nn();//Ќеравносторонние неравноугольные
 
 	// ¬нешние функции
-	virtual int NumPoint() const override;//число контрольных точек, лежащих на контуре пластины
+	virtual int PointCount() const override;//число контрольных точек, лежащих на контуре пластины
 	virtual void IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt &P, gp_Vec &V, gp_Ax3 &Ax3) const override;// оординаты точки, лежащей на контуре пластины, n- номер точки в массиве узловых точек node_p
 	void IIAx(Standard_Integer n, Standard_Real t, gp_Ax3 &Ax3) const;
 	void swap(CIndexableInsert&);

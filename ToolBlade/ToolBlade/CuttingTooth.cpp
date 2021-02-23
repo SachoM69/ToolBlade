@@ -360,12 +360,12 @@ double CIndInsTooth::ftY(int iY0, int i)
 		troot = math_BracketedRoot(ftrot, 0, 1, 1e-10).Root();
 		troot += iY0;
 	}
-	if (troot < 0)  troot = IndIns->NumPoint() + troot;
+	if (troot < 0)  troot = IndIns->PointCount() + troot;
 	return troot;
 }
 void CIndInsTooth::ContourExtremities(int& iK0maxX, int& iK0maxY, int index)
 {
-	int count = IndIns->NumPoint();
+	int count = IndIns->PointCount();
 	gp_Pnt K0max = K0r(0);
 	iK0maxX = -1;
 	iK0maxY = -1;
@@ -432,9 +432,9 @@ gp_Pnt CIndInsTooth::K0r(int index)
 	return res;
 }
 
-TopoDS_Shape CIndInsTooth::RotatedIntoPlace()
+TopoDS_Shape CIndInsTooth::RotatedIntoPlace() const
 {
-	TopoDS_Shape shp = IndIns->ConstructToolBlade();
+	TopoDS_Shape shp = IndIns->GetResultingShape();
 	gp_Trsf inst_rot_part, z_offset_part;
 	inst_rot_part.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
 	z_offset_part.SetTranslation(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
@@ -461,9 +461,9 @@ void CIndInsTooth::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_V
 	Ax3 = oA;
 }
 
-int CIndInsTooth::NumPoint() const
+int CIndInsTooth::PointCount() const
 {
-	return IndIns->NumPoint();
+	return IndIns->PointCount();
 }
 
 gp_Dir CIndInsTooth::NormalToReferencePlane() const

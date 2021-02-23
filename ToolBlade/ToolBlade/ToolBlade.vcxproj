@@ -154,10 +154,12 @@
   <ItemGroup>
     <ClInclude Include="CuttingTooth.h" />
     <ClInclude Include="IndexableIns.h" />
+    <ClInclude Include="IndexableInsertTool.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToolBlade.h" />
     <ClInclude Include="ToolIndIns.h" />
+    <ClInclude Include="InsertPreview.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CuttingTooth.cpp" />
@@ -176,6 +178,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="IndexableIns.cpp" />
+    <ClCompile Include="IndexableInsertTool.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -184,6 +187,7 @@
     </ClCompile>
     <ClCompile Include="ToolBlade.cpp" />
     <ClCompile Include="ToolIndIns.cpp" />
+    <ClCompile Include="InsertPreview.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

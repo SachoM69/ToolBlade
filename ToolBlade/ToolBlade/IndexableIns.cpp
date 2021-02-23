@@ -238,12 +238,12 @@ void CIndexableInsert::rtrm_sh()//, void** w, void** darr)
 		d_order.push_back(1);
 }
 
-void CIndexableIns::rtrm_chamfer()
+void CIndexableInsert::rtrm_chamfer()
 //ÏÐÎÔÈËÜ ÐÅÆÓÙÅÉ ÊÐÎÌÊÈ ÐÀÂÍÎÑÒÎÐÎÍÍÈÕ È ÍÅÐÀÂÍÎÓÃÎËÜÍÛÕ ÏËÀÑÒÈÍ ÌÍÎÃÎÃÐÀÍÍÎÉ ÔÎÐÌÛ ñ ôàñêîé
 {
 	double d = IInst.Dim, r = IInst.r;
 	double r1 = r;
-	int n = IInst.n;
+	int n = IInst.VertexCount;
 	int pts_per_edge = 2;
 	UINT len = pts_per_edge * n + 1;
 	//î÷èñòêà è ïîäãîòîâêà ìàññèâîâ
@@ -300,7 +300,7 @@ void CIndexableIns::rtrm_chamfer()
 	node_p.push_back(node_p[0]);
 }
 
-void CIndexableIns::nn()//, void** w, void** darr)
+void CIndexableInsert::nn()//, void** w, void** darr)
 //ÏÐÎÔÈËÜ ÐÅÆÓÙÅÉ ÊÐÎÌÊÈ ÍÅÐÀÂÍÎÑÒÎÐÎÍÍÈÕ È ÍÅÐÀÂÍÎÓÃÎËÜÍÛÕ ÏËÀÑÒÈÍ ÌÍÎÃÎÃÐÀÍÍÎÉ ÔÎÐÌÛ
 {
 	double seps=sin(IInst.eps), ceps=cos(IInst.eps);
@@ -384,6 +384,7 @@ CIndexableInsert::CIndexableInsert(const IndInsParameters* IIt)
 	if(IIt) // êîíñòðóêòîð CIndInsCuttingTooth
 		IInst=*IIt;
 	else memset(&IInst, 0, sizeof(IInst)); // TODO óñòàíàâëèâàòü êàæäîå ïîëå
+	ConstructToolBlade();
 }
 
 CIndexableInsert::~CIndexableInsert(void)
@@ -443,7 +444,7 @@ void CIndexableInsert::swap(CIndexableInsert& src)
 }*/
 
 //Ñîçäàåò ôîðìó ëåçâèÿ èíñòðóìåíòà
-/*TopoDS_Shape CIndexableIns::ConstructToolBlade()//÷èñëî âåðøèí
+/*TopoDS_Shape CIndexableIns::GetResultingShape()//÷èñëî âåðøèí
 {
 throw Standard_NoSuchObject("Âûçâàí àáñòðàêòíûé ìåòîä ðèñîâàíèÿ ïëàñòèíû");
 	
@@ -521,7 +522,7 @@ CIndexableInsESEA::~CIndexableInsESEA(void)
 {
 }*/
 
-TopoDS_Shape CIndexableInsert::ConstructToolBlade()
+void CIndexableInsert::ConstructToolBlade()
 {
 	npmain.clear();
 	switch(IInst.IGroup)
@@ -544,23 +545,9 @@ TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 		}
 		break;
 	case 2:
-		IInst.L=14.;
-		IInst.B=10.;
-		IInst.r=1.;
-		IInst.eps=0.5*pi;
 		nn();
 		break;
 	case 3:
-		IInst.L=14.;
-		IInst.B=10.;
-		IInst.r=1.;
-		switch (IInst.FormChar)
-		{
-			case 'A': IInst.eps=DEG(85.); break;
-			case 'B': IInst.eps=DEG(82.); break;
-			case 'K': IInst.eps=DEG(55.); break;
-			case 'F': IInst.eps=DEG(84.); break;
-		}
 		nn();
 		break;
 	}
@@ -607,11 +594,15 @@ TopoDS_Shape CIndexableInsert::ConstructToolBlade()
 		ToolBlade = BRepAlgoAPI_Cut(ToolBlade,CB); 
 	}
 	//Êîíåö ñîçäàíèÿ òåëà ïëàñòèíû
-	return ToolBlade;
+	ToolBladeShape = ToolBlade;
 }
 
+TopoDS_Shape CIndexableInsert::GetResultingShape() const
+{
+	return ToolBladeShape;
+}
 
-int CIndexableInsert::NumPoint() const
+int CIndexableInsert::PointCount() const
 {
 	return int(npmain.size());
 }

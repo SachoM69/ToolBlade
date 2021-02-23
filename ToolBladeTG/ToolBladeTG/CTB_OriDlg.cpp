@@ -192,7 +192,7 @@ void CTB_OriDlg::SetActiveEdgeList()
 	InsertProvider->QueryIndInsObject(CurrentIndex, &object);
 	CString S;
 	PointCB.ResetContent();
-	for (auto i = 0; i < object->NumPoint(); i++)
+	for (auto i = 0; i < object->PointCount(); i++)
 	{
 		S.Format(L"%d", i);
 		PointCB.AddString(S);
