@@ -52,8 +52,6 @@ public:
 	virtual gp_Pnt XExtremityPoint() const override;
 	virtual gp_Pnt YExtremityPoint() const override;
 
-	// ось инструмента. TODO класс инструмента?
-	virtual gp_Vec ToolAxis() const override;
 protected:
 	// исходные данные
 	double gamma, alpha, phi, phi1, lambda;
@@ -84,7 +82,7 @@ protected:
 class CIndInsTooth :public CCuttingTooth
 {
 public:
-	CIndInsTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT, DirToolType DTT, CIndexableInsert* vIndIns);
+	CIndInsTooth(double vgamma, double vphi, double vlambda, double diameter, ToolType TT, DirToolType DTT, std::shared_ptr<CIndexableInsert> vIndIns);
 	~CIndInsTooth();
 	gp_Trsf GetFI_Edge0();
 	void SetFI_ii0(Standard_Integer n, Standard_Real t, gp_Ax3& Ax3);
@@ -105,7 +103,7 @@ public:
 	virtual double gammaP() const override;
 	virtual double alphaP() const override;
 
-	CIndexableInsert* IndIns;
+	std::shared_ptr<CIndexableInsert> IndIns;
 protected:
 
 	Standard_Integer II_n;//номер главной режущей кромки пластины

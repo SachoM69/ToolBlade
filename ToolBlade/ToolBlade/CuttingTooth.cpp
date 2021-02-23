@@ -253,19 +253,6 @@ gp_Pnt CCuttingTooth::YExtremityPoint() const
 	return oP;
 }
 
-gp_Vec CCuttingTooth::ToolAxis() const
-{
-	switch (Type)
-	{
-	case Drilling_Tool:
-		return gp_Vec(-tool_diam, 0, 0);
-	case Milling_Tool:
-		return gp_Vec(0, tool_diam * (Dir== DirTool_Right?1:-1), 0);
-	default:
-		return gp_Vec();
-	}
-}
-
 void CCuttingTooth::CalcCutterAngles()
 {
 	CalculateTipCoordinates();
@@ -278,7 +265,7 @@ void CCuttingTooth::CalcCutterAngles()
 
 CIndInsTooth::CIndInsTooth
 	(double vgamma, double vphi, double vlambda, double diameter,
-	ToolType TT, DirToolType DTT, CIndexableInsert* vIndIns)
+	ToolType TT, DirToolType DTT, std::shared_ptr<CIndexableInsert> vIndIns)
 	:CCuttingTooth(vgamma, vphi, vlambda, diameter, TT, DTT),
 	IndIns(vIndIns), IIAx(), FI_Edge0(), Ax_Edge0()
 {

@@ -3,6 +3,7 @@
 class CInsertPreview :
 	public IInsertPreview
 {
+public:
 	CInsertPreview(Handle_AIS_InteractiveContext thiscontext);
 	// Унаследовано через IInsertPreview
 	virtual void Preview(std::shared_ptr<IIndexableInsert>) override;
@@ -11,7 +12,7 @@ class CInsertPreview :
 	virtual void DestroyPreview() override;
 
 protected:
-	Handle_AIS_Shape PreviewShape;
+	NCollection_Sequence<Handle(AIS_Shape)> PreviewShape;
 	Handle_AIS_InteractiveContext PreviewContext;
 };
 

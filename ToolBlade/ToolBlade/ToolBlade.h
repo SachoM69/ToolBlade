@@ -1,6 +1,7 @@
 // Основной включаемый файл библиотеки.
 // Позволяет создать геометрию пластины, сориентировать её и вставить в инструмент.
 // Все углы в радианах
+#pragma once
 #include <memory>
 #include <functional>
 
@@ -10,14 +11,16 @@ struct IndInsOrientation;
 class IIndexableInsertSeated;
 class IIndexableInsertTool;
 class IInsertPreview;
+struct IndInsToolParams;
 
 __declspec(dllexport) std::shared_ptr<IIndexableInsert> CreateInsert(const IndInsParameters*);
 __declspec(dllexport) std::shared_ptr<IIndexableInsertSeated> OrientInsert(std::shared_ptr<IIndexableInsert>, const IndInsOrientation* IIt);
 
-__declspec(dllexport) std::shared_ptr<IIndexableInsertTool> CreateTool();
+__declspec(dllexport) std::shared_ptr<IIndexableInsertTool> CreateTool(const IndInsToolParams*);
 // Создать инструмент по правилу
 typedef std::function<void(int index, double* rotation_angle, double* z_position)> PPatterningRule;
-__declspec(dllexport) std::shared_ptr<IIndexableInsertTool> CreateToolPatterned(std::shared_ptr<IIndexableInsert>, PPatterningRule);
+__declspec(dllexport) std::shared_ptr<IIndexableInsertTool> CreateToolPatterned(const IndInsToolParams*, const IndInsOrientation* IIt,
+	std::shared_ptr<IIndexableInsert>, PPatterningRule, int count);
 
 __declspec(dllexport) std::shared_ptr<IInsertPreview> CreateInsertPreview(Handle_AIS_InteractiveContext);
 
@@ -86,6 +89,13 @@ struct IndInsOrientation
 	double EdgePosition;
 };
 
+struct IndInsToolParams
+{
+	double Diameter;
+	ToolType Type;
+	DirToolType Dir;
+};
+
 class IIndexableInsert
 {
 public:
@@ -110,7 +120,6 @@ public:
 	virtual double EffectiveKinematicReliefAngle(Standard_Integer n, Standard_Real t, gp_Vec velocity) const = 0;
 	virtual gp_Pnt XExtremityPoint() const = 0;
 	virtual gp_Pnt YExtremityPoint() const = 0;
-	virtual gp_Vec ToolAxis() const = 0;
 	virtual TopoDS_Shape RotatedIntoPlace() const = 0;
 };
 
@@ -119,6 +128,15 @@ class IIndexableInsertTool
 public:
 	virtual int InsertCount() const = 0;
 	virtual void AppendInsert(std::shared_ptr<IIndexableInsertSeated>) = 0;
+	virtual void RemoveInsert(int index) = 0;
+	virtual std::shared_ptr<IIndexableInsertSeated> GetInsert(int index) const = 0;
+	virtual void SwapInsert(int index, std::shared_ptr<IIndexableInsertSeated>) = 0;
+	virtual gp_Vec ToolAxis() const = 0;
+	virtual ToolType Type() const = 0;
+	virtual DirToolType CutDirection() const = 0;
+	virtual std::shared_ptr<IIndexableInsertSeated> operator [](int index) const = 0;
+	virtual IFSelect_ReturnStatus LoadShapeFromSTEP(const char* path) = 0;
+	virtual Handle(TopTools_HSequenceOfShape) GetShape() const = 0;
 };
 
 class IInsertPreview

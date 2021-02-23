@@ -115,6 +115,7 @@
 #include <Standard_IStream.hxx>
 #include <Standard_Macro.hxx>
 #include <Standard_NotImplemented.hxx>
+#include <STEPControl_Reader.hxx>
 //#include <Handle_Standard_NullValue.hxx>
 #include <Standard_OStream.hxx>
 #include <Standard_Overflow.hxx>
@@ -155,5 +156,8 @@
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <WNT_Window.hxx>
+#include <XSControl_WorkSession.hxx>
+#include <XSControl_TransferReader.hxx>
+#include <Transfer_TransientProcess.hxx>
 
 #define Tolerance() (1e-6)
