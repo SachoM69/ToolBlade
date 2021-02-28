@@ -99,3 +99,18 @@ Handle(TopTools_HSequenceOfShape) CIndexableInsertTool::GetShape() const
 {
 	return aHSequenceOfShape;
 }
+
+IFSelect_ReturnStatus CIndexableInsertTool::LoadShapeFromSTEP(const wchar_t* path)
+{
+	return IFSelect_ReturnStatus();
+}
+
+void CIndexableInsertTool::SetType(ToolType t)
+{
+	type = t;
+}
+
+void CIndexableInsertTool::SetCutDirection(DirToolType d)
+{
+	Dir = d;
+}

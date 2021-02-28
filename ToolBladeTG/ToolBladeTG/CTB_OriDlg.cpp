@@ -522,10 +522,9 @@ void CTB_OriDlg::UpdateDisplay(const IndInsOrientation* orientation_data, int fl
 		InsertProvider->ShowPlane(gp_Pln(), 0, false);
 		InsertProvider->ShowPlane(gp_Pln(), 1, false);
 	}
-	const IIndexableInsertSeated* iis;
-	InsertProvider->QueryIndInsObjectSeated(CurrentIndex, &iis);
-	if(iis->ToolAxis().Magnitude()>0) InsertProvider->ShowAxis(iis->ToolAxis(), 0, true);
-	else InsertProvider->ShowAxis(iis->ToolAxis(), 0, false);
+	auto tool = InsertProvider->QueryToolObject();
+	if(tool->ToolAxis().Magnitude()>0) InsertProvider->ShowAxis(tool->ToolAxis(), 0, true);
+	else InsertProvider->ShowAxis(tool->ToolAxis(), 0, false);
 	InsertProvider->UpdateDisplay();
 }
 

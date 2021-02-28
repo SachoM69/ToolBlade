@@ -42,13 +42,15 @@ private:
 		IndInsParameters libdata;
 		IndInsOrientation liboridata;
 		IndInsAttributes diagdata;
-		IIndexableInsert* libcpptr;
-		IIndexableInsertSeated* liboriptr;
+		std::shared_ptr<IIndexableInsert> libcpptr;
+		std::shared_ptr<IIndexableInsertSeated> liboriptr;
 		std::map<GraphType, Handle_AIS_Shape> graphs;
 		
 	};
 	std::vector<IndInsData> CutterParams;
 	ToolData Instrument;
+	std::shared_ptr<IIndexableInsertTool> Tool;
+	std::shared_ptr<IInsertPreview> Preview;
 	Handle_ISession_Direction MyCoolArrow[3];
 	Handle_ISession_Direction PntDirArrow;
 	Handle_AIS_Point VisPnt;
@@ -91,6 +93,8 @@ public:
 	virtual HRESULT HideKinematicReliefAngle(int index) override;
 	virtual HRESULT ShowPlane(gp_Pln, int planeindex, bool show) override;
 	virtual HRESULT ShowAxis(gp_Vec, int vectorindex, bool show) override;
+	virtual std::shared_ptr<IIndexableInsertTool> QueryToolObject() override;
+	virtual HRESULT RefreshTool() override;
 
 // Реализация
 public:
@@ -117,4 +121,5 @@ public:
 	afx_msg void OnEdparams();
 	afx_msg void OnTooltype();
 	afx_msg void OnShowtool();
+
 };

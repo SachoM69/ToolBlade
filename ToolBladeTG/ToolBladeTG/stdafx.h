@@ -122,6 +122,7 @@
 #include <AIS_Axis.hxx>
 #include <Geom_Axis1Placement.hxx>
 #include <Prs3d_PlaneAspect.hxx>
+#include <IFSelect_ReturnStatus.hxx>
 
 /*
 #include <AIS_Drawer.hxx>

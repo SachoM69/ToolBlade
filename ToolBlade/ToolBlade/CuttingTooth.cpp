@@ -109,6 +109,24 @@ void CCuttingTooth::CalculateTipCoordinates()
 	}
 }
 
+gp_Vec CCuttingTooth::ToolAxis() const
+{
+	switch (Type)
+	{
+	case Drilling_Tool:
+		return gp_Vec(-tool_diam, 0, 0);
+	case Milling_Tool:
+		return gp_Vec(0, tool_diam * (Dir == DirTool_Right ? 1 : -1), 0);
+	default:
+		return gp_Vec();
+	}
+}
+
+gp_Pnt CCuttingTooth::ToolTip() const
+{
+	return gp_Pnt(plx, ply, plz);
+}
+
 // вычисление ‘пл
 void CCuttingTooth::CalculateMatrixOfPrincipalPlane()
 {
@@ -238,8 +256,8 @@ gp_Pnt CCuttingTooth::XExtremityPoint() const
 	gp_Pnt oP;
 	oP = m_pmaxX;
 	oP.Translate(Fpl.TranslationPart());
-	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	oP.Translate(ToolAxis().Normalized()*plz);
 	return oP;
 }
 
@@ -248,8 +266,8 @@ gp_Pnt CCuttingTooth::YExtremityPoint() const
 	gp_Pnt oP;
 	oP = m_pmaxY;
 	oP.Translate(Fpl.TranslationPart());
-	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	oP.Translate(ToolAxis().Normalized() * plz);
 	return oP;
 }
 
@@ -423,8 +441,8 @@ TopoDS_Shape CIndInsTooth::RotatedIntoPlace() const
 {
 	TopoDS_Shape shp = IndIns->GetResultingShape();
 	gp_Trsf inst_rot_part, z_offset_part;
-	inst_rot_part.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	z_offset_part.SetTranslation(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	inst_rot_part.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	z_offset_part.SetTranslation(ToolAxis().Normalized() * plz);
 	shp.Move(TopLoc_Location(z_offset_part * inst_rot_part * Fpl ));
 	return shp;
 }
@@ -438,11 +456,11 @@ void CIndInsTooth::IIVertex(Standard_Integer n, Standard_Real t, gp_Pnt& P, gp_V
 	oP.Transform(Fpl);
 	oV.Transform(Fpl);
 	oA.Transform(Fpl);
-	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	oV.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	oA.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), axis_rot);
-	oP.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
-	oA.Translate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, plz));
+	oP.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	oV.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	oA.Rotate(gp_Ax1(gp_Pnt(0, 0, 0), ToolAxis()), axis_rot);
+	oP.Translate(ToolAxis().Normalized() * plz);
+	oA.Translate(ToolAxis().Normalized() * plz);
 	P = oP;
 	V = oV;
 	Ax3 = oA;

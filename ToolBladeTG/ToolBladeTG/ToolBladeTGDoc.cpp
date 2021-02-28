@@ -62,6 +62,12 @@ CToolBladeTGDoc::CToolBladeTGDoc():VisPnt(0)
 	IndOri.Type = ToolType(Instrument.ToolType);
 	idt.libdata=IndIns;
 	idt.liboridata = IndOri;
+	IndInsToolParams prms;
+	prms.Diameter = IndOri.Diameter;
+	prms.Dir = IndOri.Dir;
+	prms.Type = IndOri.Type;
+	Tool = CreateTool(&prms);
+	Tool->AppendInsert(idt.liboriptr);
 	CutterParams.push_back(idt);
 }
 
@@ -114,19 +120,12 @@ BOOL CToolBladeTGDoc::OnNewDocument()
 	if (!CDocument::OnNewDocument())
 		return FALSE;
 
-	//for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
-	/*MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
-	MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
-	MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
-	for each (auto & mca in MyCoolArrow)
-		myAISContext->Display(mca, true);*/
-
-	gp_Ax2 ax = gp_Ax2(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0));
-
 	Handle(Geom_Axis2Placement) myTrihedronAxis = new Geom_Axis2Placement(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), gp_Vec(10, 0, 0));
 	AIS_Trihedron* tri = new AIS_Trihedron(myTrihedronAxis);
 	tri->SetSize(10);
 	myAISContext->Display(tri, Standard_True);
+
+	Preview = CreateInsertPreview(myAISContext);
 
 	return TRUE;
 }
@@ -225,8 +224,9 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsParameters *a)
 	{
 		size_t indop(index);
 		if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
-		if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
-		CutterParams[index].libcpptr = CreateInsertAndPreview(myAISContext, a);
+		auto insptr = CreateInsert(a);
+		CutterParams[index].libcpptr = insptr;
+		Preview->Preview(insptr);
 
 	}
 	catch(Standard_OutOfRange& e)
@@ -256,7 +256,9 @@ HRESULT CToolBladeTGDoc::RefreshCutter(int index, const IndInsOrientation* a)
 		if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 		if (!CutterParams[index].libcpptr)
 			CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
-		CutterParams[index].liboriptr = OrientInsertAndPreview(myAISContext, CutterParams[index].libcpptr, a);
+		auto newori = OrientInsert(CutterParams[index].libcpptr, a);
+		CutterParams[index].liboriptr = newori;
+		Preview->Preview(newori);
 	}
 	catch (Standard_OutOfRange& e)
 	{
@@ -303,7 +305,6 @@ HRESULT CToolBladeTGDoc::UpdateIndInsInformation(int index, const IndInsParamete
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
 	CutterParams[index].libdata = *res;
-	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
 	CutterParams[index].libcpptr = CreateInsert(res);
 	return S_OK;
 }
@@ -354,6 +355,7 @@ HRESULT CToolBladeTGDoc::UpdateToolType(int type)
 	{
 		CutterParams[i].liboridata.Type = ToolType(Instrument.ToolType);
 	}
+	Tool->SetType(ToolType(Instrument.ToolType));
 	return S_OK;
 }
 
@@ -364,6 +366,7 @@ HRESULT CToolBladeTGDoc::UpdateToolDirection(bool dir)
 	{
 		CutterParams[i].liboridata.Dir = DirToolType(Instrument.CutDirection);
 	}
+	Tool->SetCutDirection(DirToolType(Instrument.CutDirection));
 	return S_OK;
 }
 
@@ -371,8 +374,9 @@ HRESULT CToolBladeTGDoc::QueryIndInsObject(int index, const IIndexableInsert** o
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
-	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
-	*optr = CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
+	auto insptr = CreateInsert(&CutterParams[index].libdata);
+	CutterParams[index].libcpptr = insptr;
+	*optr = insptr.get();
 	return S_OK;
 }
 
@@ -381,16 +385,18 @@ HRESULT CToolBladeTGDoc::QueryIndInsObjectSeated(int index, const IIndexableInse
 	size_t indop(index);
 	if (index < 0 || indop >= CutterParams.size()) return E_INVALIDARG;
 	if(!CutterParams[index].libcpptr) CutterParams[index].libcpptr = CreateInsert(&CutterParams[index].libdata);
-	if(CutterParams[index].liboriptr) DestroyInsert(CutterParams[index].liboriptr);
 	CutterParams[index].liboridata.Dir = DirToolType(Instrument.CutDirection);
 	CutterParams[index].liboridata.Type = ToolType(Instrument.ToolType);
-	*optr = CutterParams[index].liboriptr = OrientInsert(CutterParams[index].libcpptr , &CutterParams[index].liboridata);
+	auto insptr = OrientInsert(CutterParams[index].libcpptr, &CutterParams[index].liboridata);
+	CutterParams[index].liboriptr = insptr;
+	Tool->SwapInsert(index, insptr);
+	*optr = insptr.get();
 	return S_OK;
 }
 
 void CToolBladeTGDoc::OnTooltype()
 {
-	ToolTypeDlg* TTD = new ToolTypeDlg;
+	ToolTypeDlg* TTD = new ToolTypeDlg(this);
 
 	TTD->DoModal();
 
@@ -416,10 +422,11 @@ HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)
 
 	}
 	idt.diagdata.IsDisabled=false;
-	idt.libcpptr=nullptr;
+	idt.libcpptr = nullptr;
 	idt.liboriptr = nullptr;
 	CutterParams.push_back(idt);
 	Instrument.ActualToothCount++; Instrument.UsedToothCount++;
+	Tool->AppendInsert(idt.liboriptr);
 	*index = int(CutterParams.size()-1);
 	return S_OK;
 }
@@ -428,9 +435,9 @@ HRESULT CToolBladeTGDoc::RequestRemoveInsert(int index)
 {
 	size_t indop(index);
 	if(index<0 || indop>=CutterParams.size()) return E_INVALIDARG;
-	if(CutterParams[index].libcpptr) DestroyInsert(CutterParams[index].libcpptr);
 	Instrument.ActualToothCount--;
 	if(!CutterParams[index].diagdata.IsDisabled) Instrument.UsedToothCount--;
+	Tool->RemoveInsert(index);
 	CutterParams.erase(index+CutterParams.begin());
 	return S_OK;
 }
@@ -453,24 +460,7 @@ void CToolBladeTGDoc::OnShowtool()
 {
 	try
 	{
-		/*if(!CutterParams)
-			InsertShape(myAISContext);
-		else */
-		/*
-		IndInsOrientation a; a.EdgeIndex = 0; a.Diameter = 0.02; a.Dir = DirTool_Right; a.EdgePosition = 0; a.Phi = 0;
-		a.Gamma = 0; a.Lambda = 0; a.Type = Turning_Cutter;
-		CutterParams[0].libcpptr = OrientInsertAndPreview(myAISContext, CutterParams.begin()->libcpptr, &a); // не самый красивый способ
-		for each (auto & mca in MyCoolArrow) if (!mca.IsNull()) myAISContext->Remove(mca, Standard_False);
-		MyCoolArrow[0] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(10, 0, 0), 1);
-		MyCoolArrow[1] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 10, 0), 1);
-		MyCoolArrow[2] = new ISession_Direction(gp_Pnt(0, 0, 0), gp_Vec(0, 0, 10), 1);
-		//for (int i=0; i<3; i++) 
-		for each (auto & mca in MyCoolArrow)
-			myAISContext->Display(mca, true);*/
-
 		CTB_OriDlg* NPGetter = new CTB_OriDlg(this);
-		//NPGetter->DoModal();
-		//delete NPGetter;
 
 	}
 	catch (Standard_OutOfRange & e)
@@ -489,6 +479,17 @@ void CToolBladeTGDoc::OnShowtool()
 	{
 		MessageBoxA(NULL, e.GetMessageString(), "Exception in drawing routine", MB_OK);
 	}
+}
+
+HRESULT CToolBladeTGDoc::RefreshTool()
+{
+	Preview->Preview(Tool);
+	return S_OK;
+}
+
+std::shared_ptr<IIndexableInsertTool> CToolBladeTGDoc::QueryToolObject()
+{
+	return Tool;
 }
 
 HRESULT CToolBladeTGDoc::GraphReliefAngle(int index, const IIndexableInsertSeated* iis, double scale)

@@ -26,4 +26,9 @@ private:
 	double tool_diam;
 	std::vector<std::shared_ptr<IIndexableInsertSeated>> IndInserts;
 	Handle(TopTools_HSequenceOfShape) aHSequenceOfShape;
+
+	// Унаследовано через IIndexableInsertTool
+	virtual IFSelect_ReturnStatus LoadShapeFromSTEP(const wchar_t* path) override;
+	virtual void SetType(ToolType) override;
+	virtual void SetCutDirection(DirToolType) override;
 };

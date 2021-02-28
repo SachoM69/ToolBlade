@@ -11,8 +11,8 @@
 
 IMPLEMENT_DYNAMIC(ToolTypeDlg, CDialogEx)
 
-ToolTypeDlg::ToolTypeDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(ToolTypeDlg::IDD, pParent)
+ToolTypeDlg::ToolTypeDlg(IInstrInsList* myprov, CWnd* pParent /*=NULL*/)
+	: CDialogEx(ToolTypeDlg::IDD, pParent), InsertProvider(myprov)
 {
 
 }
@@ -29,7 +29,28 @@ void ToolTypeDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(ToolTypeDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_LOADMODEL, &ToolTypeDlg::OnBnClickedLoadmodel)
+	ON_BN_CLICKED(IDC_TOOLPREVIEW, &ToolTypeDlg::OnBnClickedToolpreview)
 END_MESSAGE_MAP()
 
 
 // ToolTypeDlg message handlers
+
+
+void ToolTypeDlg::OnBnClickedLoadmodel()
+{
+	CFileDialog fileDialog(TRUE, NULL, L"*.stp;*.step");
+	INT_PTR result = fileDialog.DoModal();
+	if (result == IDOK)
+	{
+		auto tool = InsertProvider->QueryToolObject();
+		auto path = fileDialog.GetPathName();
+		tool->LoadShapeFromSTEP(path.GetBuffer());
+	}
+}
+
+
+void ToolTypeDlg::OnBnClickedToolpreview()
+{
+	InsertProvider->RefreshTool();
+}

@@ -34,6 +34,8 @@ public:
 
 	// –асчет положени€ вершины пластины в инструменте
 	void CalculateTipCoordinates();
+	gp_Vec ToolAxis() const;
+	gp_Pnt ToolTip() const;
 	void CalculateMatrixOfPrincipalPlane();
 	void PlaneFromMatrixAndCoordinates();
 	virtual void ProjectContourToPlane() = 0;

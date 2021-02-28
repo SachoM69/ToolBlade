@@ -136,7 +136,10 @@ public:
 	virtual DirToolType CutDirection() const = 0;
 	virtual std::shared_ptr<IIndexableInsertSeated> operator [](int index) const = 0;
 	virtual IFSelect_ReturnStatus LoadShapeFromSTEP(const char* path) = 0;
+	virtual IFSelect_ReturnStatus LoadShapeFromSTEP(const wchar_t* path) = 0;
 	virtual Handle(TopTools_HSequenceOfShape) GetShape() const = 0;
+	virtual void SetType(ToolType) = 0;
+	virtual void SetCutDirection(DirToolType) = 0;
 };
 
 class IInsertPreview
