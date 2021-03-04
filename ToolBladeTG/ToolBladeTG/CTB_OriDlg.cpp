@@ -479,7 +479,7 @@ void CTB_OriDlg::UpdateDisplayDefault(const IndInsOrientation* orientation_data)
 	int flags = UD_ACTIVEPOINT;
 	if (ShowReliefGraphCheck.GetCheck() == TRUE) flags |= UD_RELIEF_ANGLE;
 	if (ShowReliefKinematicGraphCheck.GetCheck() == TRUE) flags |= UD_KINEMATIC_RELIEF_ANGLE;
-	if (ShowPlanes.GetCheck() == TRUE) flags |= UD_SHOWPLANES;
+	if (ShowPlanes.GetCheck() == TRUE) flags |= UD_SHOWPLANES | UD_SHOWAXIS;
 	UpdateDisplay(orientation_data, flags);
 }
 
@@ -522,9 +522,12 @@ void CTB_OriDlg::UpdateDisplay(const IndInsOrientation* orientation_data, int fl
 		InsertProvider->ShowPlane(gp_Pln(), 0, false);
 		InsertProvider->ShowPlane(gp_Pln(), 1, false);
 	}
-	auto tool = InsertProvider->QueryToolObject();
-	if(tool->ToolAxis().Magnitude()>0) InsertProvider->ShowAxis(tool->ToolAxis(), 0, true);
-	else InsertProvider->ShowAxis(tool->ToolAxis(), 0, false);
+	if (flags & UD_SHOWAXIS)
+	{
+		auto tool = InsertProvider->QueryToolObject();
+		InsertProvider->ShowAxis(tool->ToolAxis(), 0, true);
+	}
+	else InsertProvider->ShowAxis(gp_Vec(), 0, false);
 	InsertProvider->UpdateDisplay();
 }
 

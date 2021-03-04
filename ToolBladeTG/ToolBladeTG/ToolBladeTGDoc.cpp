@@ -397,10 +397,6 @@ HRESULT CToolBladeTGDoc::QueryIndInsObjectSeated(int index, const IIndexableInse
 void CToolBladeTGDoc::OnTooltype()
 {
 	ToolTypeDlg* TTD = new ToolTypeDlg(this);
-
-	TTD->DoModal();
-
-	delete TTD;
 }
 
 HRESULT CToolBladeTGDoc::RequestNewInsert(int* index)

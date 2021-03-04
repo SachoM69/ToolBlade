@@ -118,7 +118,7 @@ gp_Vec CCuttingTooth::ToolAxis() const
 	case Milling_Tool:
 		return gp_Vec(0, tool_diam * (Dir == DirTool_Right ? 1 : -1), 0);
 	default:
-		return gp_Vec();
+		return gp_Vec(0, 0, 1);
 	}
 }
 

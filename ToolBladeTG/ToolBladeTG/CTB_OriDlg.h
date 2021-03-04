@@ -40,6 +40,7 @@ protected:
 #define UD_KINEMATIC_RELIEF_ANGLE 4
 #define UD_ACTIVEPOINT 8
 #define UD_SHOWPLANES 16
+#define UD_SHOWAXIS 32
 	void UpdateDisplayDefault();
 	void UpdateDisplayDefault(const IndInsOrientation* orientation_data);
 	void UpdateDisplay(const IndInsOrientation* orientation_data, int flags);

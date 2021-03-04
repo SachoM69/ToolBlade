@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "IndexableInsertTool.h"
+#include <stdlib.h>
 
 CIndexableInsertTool::CIndexableInsertTool(double diameter, ToolType TT, DirToolType DTT):
 	tool_diam(diameter), type(TT), Dir(DTT)
@@ -42,7 +43,7 @@ gp_Vec CIndexableInsertTool::ToolAxis() const
 	case Milling_Tool:
 		return gp_Vec(0, tool_diam * (Dir == DirTool_Right ? 1 : -1), 0);
 	default:
-		return gp_Vec();
+		return gp_Vec(0, 0, 1);
 	}
 }
 
@@ -102,7 +103,12 @@ Handle(TopTools_HSequenceOfShape) CIndexableInsertTool::GetShape() const
 
 IFSelect_ReturnStatus CIndexableInsertTool::LoadShapeFromSTEP(const wchar_t* path)
 {
-	return IFSelect_ReturnStatus();
+	size_t size = wcstombs(0, path, 0)+1;
+	char* path_s = new char[size];
+	wcstombs(path_s, path, size);
+	auto ret = LoadShapeFromSTEP(path_s);
+	delete[] path_s;
+	return ret;
 }
 
 void CIndexableInsertTool::SetType(ToolType t)
